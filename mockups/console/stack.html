@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%230A0C0F%27/%3E%3Crect x=%278%27 y=%2710%27 width=%276%27 height=%2712%27 fill=%27%233FB950%27/%3E%3Ctext x=%2717%27 y=%2722%27 font-family=%27monospace%27 font-weight=%27700%27 font-size=%2714%27 fill=%27%23C9D1D9%27%3EPC%3C/text%3E%3C/svg%3E" />
+  <title>~/stack — Prashant Chaudhary</title>
+  <link rel="stylesheet" href="assets/tokens.css?v=2" />
+  <link rel="stylesheet" href="assets/base.css?v=2" />
+  <link rel="stylesheet" href="assets/palette.css?v=2" />
+  <style>
+    .stack-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+      padding: var(--space-4) 0;
+      border-top: var(--rule-hairline-w) solid var(--rule);
+    }
+    @media (min-width: 768px) {
+      .stack-row {
+        grid-template-columns: 220px 1fr 220px;
+        gap: var(--space-4);
+        align-items: baseline;
+      }
+    }
+    .stack-row__name { font-weight: 600; }
+    .stack-row__note { color: var(--ink-muted); }
+    .stack-row__projects { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .heatmap {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: repeat(7, 1fr);
+      gap: 3px;
+      overflow-x: auto;
+      padding: var(--space-4) 0;
+    }
+    .heatmap__cell { width: 10px; height: 10px; background: var(--rule); opacity: 0.35; }
+    .heatmap__cell[data-level="1"] { background: var(--signal); opacity: 0.25; }
+    .heatmap__cell[data-level="2"] { background: var(--signal); opacity: 0.5; }
+    .heatmap__cell[data-level="3"] { background: var(--signal); opacity: 0.75; }
+    .heatmap__cell[data-level="4"] { background: var(--signal); opacity: 1; }
+    .heatmap-legend { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+    .repo-row { padding: var(--space-4) 0; border-top: var(--rule-hairline-w) solid var(--rule); }
+    .repo-row__top { display: flex; justify-content: space-between; gap: var(--space-4); align-items: baseline; }
+    .repo-row__name { font-weight: 600; color: var(--signal-info); }
+    .repo-row__meta { color: var(--ink-muted); }
+  </style>
+</head>
+<body>
+
+  <header class="site-header" data-site-header>
+    <div class="frame">
+      <div class="site-header__bar">
+        <a href="index.html" class="wordmark">prashant@chaudhary:~$</a>
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="work.html">work</a>
+          <a href="writing.html">writing</a>
+          <a href="stack.html" aria-current="page">stack</a>
+          <a href="cv.html">cv</a>
+        </nav>
+        <div class="header-actions">
+          <button class="palette-hint" data-palette-hint type="button">search <kbd>⌘K</kbd></button>
+          <button class="theme-toggle" data-theme-toggle type="button">dark</button>
+          <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="mobile-nav" type="button">menu</button>
+        </div>
+      </div>
+    </div>
+    <div class="mobile-nav" id="mobile-nav" data-mobile-nav>
+      <div class="frame">
+        <a href="work.html">work</a>
+        <a href="writing.html">writing</a>
+        <a href="stack.html">stack</a>
+        <a href="cv.html">cv</a>
+        <button class="mobile-nav__palette" data-mobile-palette-open type="button">search...</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="frame">
+      <div class="line-rail" data-line-rail aria-hidden="true"></div>
+
+      <div class="page-hero" data-rail-line>
+        <h1 class="text-display" style="font-size: var(--text-h2-size);">~/stack $ grep -r "used-in"</h1>
+        <p style="max-width:60ch;">
+          Not a proficiency scale — a table of what was actually used
+          where. Every row links back to the project that proves it.
+        </p>
+      </div>
+
+      <div id="stack-layers" data-rail-line></div>
+
+      <section class="cv-section" aria-labelledby="github-heading" data-rail-line>
+        <h2 id="github-heading" class="text-h3">github activity</h2>
+        <p class="text-small" style="margin-top:var(--space-2);">github.com/<span id="gh-username"></span></p>
+
+        <div class="heatmap" id="gh-heatmap" role="img" aria-label="Contribution activity over the past year"></div>
+        <div class="heatmap-legend text-small">
+          <span>less</span>
+          <span class="heatmap__cell" data-level="0"></span>
+          <span class="heatmap__cell" data-level="1"></span>
+          <span class="heatmap__cell" data-level="2"></span>
+          <span class="heatmap__cell" data-level="3"></span>
+          <span class="heatmap__cell" data-level="4"></span>
+          <span>more</span>
+        </div>
+
+        <div id="gh-repos" style="margin-top:var(--space-5);"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="frame">
+      <hr class="rule" />
+      <div class="status-strip" data-status-strip style="margin-top: var(--space-4);"></div>
+      <div class="site-footer__row" style="margin-top: var(--space-5);">
+        <p class="text-small">© <span data-year></span> prashant chaudhary. kathmandu, nepal.</p>
+        <ul class="site-footer__links">
+          <li><a href="mailto:prashantchy265@gmail.com">email</a></li>
+          <li><a href="https://github.com/Prashantch265" target="_blank" rel="noreferrer">github</a></li>
+          <li><a href="https://linkedin.com/in/prashant-ch265" target="_blank" rel="noreferrer">linkedin</a></li>
+          <li><a href="brand.html">design notes</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/data-console.js?v=2"></script>
+  <script src="assets/app.js?v=2"></script>
+  <script>
+    (function () {
+      var data = window.SITE_DATA;
+      var projectsBySlug = {};
+      data.projects.forEach(function (p) { projectsBySlug[p.slug] = p; });
+
+      function shortTitle(title) {
+        if (title.length <= 26) return title;
+        var cut = title.slice(0, 26);
+        var lastDash = cut.lastIndexOf("-");
+        return cut.slice(0, lastDash > 8 ? lastDash : 26) + "…";
+      }
+
+      var layersEl = document.getElementById("stack-layers");
+      layersEl.innerHTML = data.stackLayers
+        .map(function (layer) {
+          var rows = layer.items
+            .map(function (item) {
+              var links = item.projects
+                .map(function (slug) {
+                  var p = projectsBySlug[slug];
+                  return p
+                    ? '<a class="tag tag--interactive" href="case-study.html?slug=' + slug + '">' + shortTitle(p.title) + "</a>"
+                    : "";
+                })
+                .join("");
+              return (
+                '<div class="stack-row">' +
+                '<span class="stack-row__name">' + item.name + "</span>" +
+                '<span class="stack-row__note">' + item.note + "</span>" +
+                '<span class="stack-row__projects">' + links + "</span>" +
+                "</div>"
+              );
+            })
+            .join("");
+          return (
+            '<section style="margin-top:var(--space-6);">' +
+            '<h2 class="text-h3">' + layer.layer + "</h2>" +
+            rows +
+            "</section>"
+          );
+        })
+        .join("");
+
+      var gh = data.githubActivity;
+      document.getElementById("gh-username").textContent = gh.username;
+
+      var heatmap = document.getElementById("gh-heatmap");
+      var cells = "";
+      gh.weeks.forEach(function (week) {
+        week.forEach(function (level) {
+          cells += '<span class="heatmap__cell" data-level="' + level + '"></span>';
+        });
+      });
+      heatmap.innerHTML = cells;
+
+      document.getElementById("gh-repos").innerHTML = gh.repos
+        .map(function (r) {
+          return (
+            '<div class="repo-row"><div class="repo-row__top">' +
+            '<span class="repo-row__name">' + r.name + "</span>" +
+            '<span class="repo-row__meta text-small">★ ' + r.stars + "</span></div>" +
+            '<p class="text-small" style="margin-top:var(--space-2);max-width:64ch;">' + r.description + "</p>" +
+            '<p class="repo-row__meta text-small" style="margin-top:var(--space-2);">' + r.language + " · updated " + r.updated + "</p>" +
+            "</div>"
+          );
+        })
+        .join("");
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%231B5E9E%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-family=%27monospace%27 font-weight=%27700%27 font-size=%2715%27 fill=%27white%27 text-anchor=%27middle%27%3EPC%3C/text%3E%3C/svg%3E" />
+  <title>Stack — Prashant Chaudhary</title>
+  <link rel="stylesheet" href="assets/tokens.css?v=2" />
+  <link rel="stylesheet" href="assets/base.css?v=2" />
+  <style>
+    .stack-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+      padding: var(--space-4) 0;
+      border-top: var(--rule-hairline-w) solid var(--rule);
+    }
+    @media (min-width: 768px) {
+      .stack-row {
+        grid-template-columns: 220px 1fr 200px;
+        gap: var(--space-4);
+        align-items: baseline;
+      }
+    }
+    .stack-row__name {
+      font-family: var(--face-mono);
+      font-weight: 500;
+    }
+    .stack-row__note {
+      color: var(--ink-muted);
+    }
+    .stack-row__projects {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+    .heatmap {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: repeat(7, 1fr);
+      gap: 3px;
+      overflow-x: auto;
+      padding: var(--space-4) 0;
+    }
+    .heatmap__cell {
+      width: 10px;
+      height: 10px;
+      background: var(--rule);
+      opacity: 0.35;
+    }
+    .heatmap__cell[data-level="1"] { background: var(--signal); opacity: 0.25; }
+    .heatmap__cell[data-level="2"] { background: var(--signal); opacity: 0.5; }
+    .heatmap__cell[data-level="3"] { background: var(--signal); opacity: 0.75; }
+    .heatmap__cell[data-level="4"] { background: var(--signal); opacity: 1; }
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: var(--space-2);
+    }
+    .repo-row {
+      padding: var(--space-4) 0;
+      border-top: var(--rule-hairline-w) solid var(--rule);
+    }
+    .repo-row__top {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--space-4);
+      align-items: baseline;
+    }
+    .repo-row__name {
+      font-family: var(--face-mono);
+      font-weight: 500;
+    }
+    .repo-row__meta {
+      color: var(--ink-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header" data-site-header>
+    <div class="frame">
+      <div class="site-header__bar">
+        <a href="index.html" class="wordmark">Prashant Chaudhary</a>
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="work.html">Work</a>
+          <a href="writing.html">Writing</a>
+          <a href="stack.html" aria-current="page">Stack</a>
+          <a href="cv.html">CV</a>
+        </nav>
+        <div class="header-actions">
+          <button class="theme-toggle" data-theme-toggle aria-label="Toggle color theme" type="button">
+            <svg class="icon-sun" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.3"/><g stroke="currentColor" stroke-width="1.3"><line x1="8" y1="0.5" x2="8" y2="2.5"/><line x1="8" y1="13.5" x2="8" y2="15.5"/><line x1="0.5" y1="8" x2="2.5" y2="8"/><line x1="13.5" y1="8" x2="15.5" y2="8"/><line x1="2.6" y1="2.6" x2="4" y2="4"/><line x1="12" y1="12" x2="13.4" y2="13.4"/><line x1="2.6" y1="13.4" x2="4" y2="12"/><line x1="12" y1="4" x2="13.4" y2="2.6"/></g></svg>
+            <svg class="icon-moon" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.5A6 6 0 1 1 6.5 2.5a5 5 0 0 0 7 7z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+          </button>
+          <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="mobile-nav" type="button">MENU</button>
+        </div>
+      </div>
+    </div>
+    <div class="mobile-nav" id="mobile-nav" data-mobile-nav>
+      <div class="frame">
+        <a href="work.html">Work</a>
+        <a href="writing.html">Writing</a>
+        <a href="stack.html">Stack</a>
+        <a href="cv.html">CV</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="frame">
+      <div class="grid-guides" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <div class="page-hero">
+        <h1 class="text-display" style="font-size: var(--text-h2-size);">Stack</h1>
+        <p style="max-width:60ch;">
+          Not a proficiency scale — a table of what was actually used
+          where. Every row links back to the project that proves it.
+        </p>
+      </div>
+
+      <div id="stack-layers"></div>
+
+      <section class="cv-section" aria-labelledby="github-heading">
+        <h2 id="github-heading" class="text-h3">GitHub activity</h2>
+        <p class="text-small" style="margin-top:var(--space-2);">github.com/<span id="gh-username"></span></p>
+
+        <div class="heatmap" id="gh-heatmap" role="img" aria-label="Contribution activity over the past year"></div>
+        <div class="heatmap-legend text-small">
+          <span>Less</span>
+          <span class="heatmap__cell" data-level="0"></span>
+          <span class="heatmap__cell" data-level="1"></span>
+          <span class="heatmap__cell" data-level="2"></span>
+          <span class="heatmap__cell" data-level="3"></span>
+          <span class="heatmap__cell" data-level="4"></span>
+          <span>More</span>
+        </div>
+
+        <div id="gh-repos" style="margin-top:var(--space-5);"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="frame">
+      <hr class="rule" />
+      <div class="site-footer__row" style="margin-top: var(--space-5);">
+        <p class="text-small">© <span data-year></span> Prashant Chaudhary. Kathmandu, Nepal.</p>
+        <ul class="site-footer__links">
+          <li><a href="mailto:prashantchy265@gmail.com">Email</a></li>
+          <li><a href="https://github.com/Prashantch265" target="_blank" rel="noreferrer">GitHub</a></li>
+          <li><a href="https://linkedin.com/in/prashant-ch265" target="_blank" rel="noreferrer">LinkedIn</a></li>
+          <li><a href="brand.html">Design notes</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/data.js?v=2"></script>
+  <script src="assets/app.js?v=2"></script>
+  <script>
+    (function () {
+      var data = window.SITE_DATA;
+      var projectsBySlug = {};
+      data.projects.forEach(function (p) { projectsBySlug[p.slug] = p; });
+
+      function shortTitle(title) {
+        var lead = title.split(":")[0];
+        if (lead.length <= 30) return lead;
+        var cut = lead.slice(0, 30);
+        var lastSpace = cut.lastIndexOf(" ");
+        return cut.slice(0, lastSpace > 12 ? lastSpace : 30) + "…";
+      }
+
+      var layersEl = document.getElementById("stack-layers");
+      layersEl.innerHTML = data.stackLayers
+        .map(function (layer) {
+          var rows = layer.items
+            .map(function (item) {
+              var links = item.projects
+                .map(function (slug) {
+                  var p = projectsBySlug[slug];
+                  return p
+                    ? '<a class="tag tag--interactive" href="case-study.html?slug=' + slug + '">' + shortTitle(p.title) + "</a>"
+                    : "";
+                })
+                .join("");
+              return (
+                '<div class="stack-row">' +
+                '<span class="stack-row__name">' + item.name + "</span>" +
+                '<span class="stack-row__note">' + item.note + "</span>" +
+                '<span class="stack-row__projects">' + links + "</span>" +
+                "</div>"
+              );
+            })
+            .join("");
+          return (
+            '<section style="margin-top:var(--space-6);">' +
+            '<h2 class="text-h3">' + layer.layer + "</h2>" +
+            rows +
+            "</section>"
+          );
+        })
+        .join("");
+
+      var gh = data.githubActivity;
+      document.getElementById("gh-username").textContent = gh.username;
+
+      var heatmap = document.getElementById("gh-heatmap");
+      var cells = "";
+      gh.weeks.forEach(function (week) {
+        week.forEach(function (level) {
+          cells += '<span class="heatmap__cell" data-level="' + level + '"></span>';
+        });
+      });
+      heatmap.innerHTML = cells;
+
+      document.getElementById("gh-repos").innerHTML = gh.repos
+        .map(function (r) {
+          return (
+            '<div class="repo-row"><div class="repo-row__top">' +
+            '<span class="repo-row__name">' + r.name + "</span>" +
+            '<span class="repo-row__meta text-small">★ ' + r.stars + "</span></div>" +
+            '<p class="text-small" style="margin-top:var(--space-2);max-width:64ch;">' + r.description + "</p>" +
+            '<p class="repo-row__meta text-small" style="margin-top:var(--space-2);">' + r.language + " · updated " + r.updated + "</p>" +
+            "</div>"
+          );
+        })
+        .join("");
+    })();
+  </script>
+</body>
+</html>

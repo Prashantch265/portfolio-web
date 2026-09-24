@@ -1,0 +1,1035 @@
+/*
+  Console base system — PRD-frontend-console.md §4, §6, §7.
+  Line-number rail, hairlines, mono type scale, component inventory.
+  Tokens only — every color/space/type value below reads from tokens.css.
+*/
+
+/* ---------------------------------------------------------------------
+   Reset + foundations
+--------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--face-mono);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-lh);
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: var(--signal);
+  color: var(--on-signal);
+}
+
+* {
+  scrollbar-color: var(--rule) var(--bg);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border: 2px solid var(--bg);
+  border-radius: 0;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: var(--rule-emphasis-w) solid var(--signal-info);
+  outline-offset: 3px;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+::placeholder {
+  color: var(--ink-muted);
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------
+   Typography — §4.3. Single mono face; hierarchy from size/weight only.
+--------------------------------------------------------------------- */
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--face-mono);
+  font-weight: 700;
+}
+
+.text-display {
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-lh);
+  font-weight: var(--text-display-weight);
+}
+
+.text-h2 {
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-lh);
+  font-weight: 700;
+}
+
+.text-h3 {
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-lh);
+  font-weight: 600;
+}
+
+p {
+  margin: 0;
+  max-width: 68ch;
+}
+
+.text-body-lg {
+  font-size: var(--text-body-lg-size);
+  line-height: var(--text-body-lg-lh);
+}
+
+.text-small {
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-lh);
+  color: var(--ink-muted);
+}
+
+.prompt-label {
+  font-size: var(--text-prompt-size);
+  line-height: var(--text-prompt-lh);
+  letter-spacing: var(--text-prompt-tracking);
+  color: var(--ink-muted);
+}
+
+.wordmark {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.wordmark__cursor {
+  display: inline-block;
+  width: 0.5em;
+  background: var(--signal);
+  color: var(--bg);
+}
+
+.wordmark__cursor.is-blinking {
+  animation: bp-cursor-blink 500ms steps(1) 2;
+}
+
+@keyframes bp-cursor-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Grid + line-number rail — §4.1. Same 12-col math as Blueprint, a
+   visible structure device expressed as an editor-style rail instead
+   of column guides — you're reading source, not looking at a drawing.
+--------------------------------------------------------------------- */
+
+.frame {
+  max-width: var(--grid-max);
+  margin: 0 auto;
+  padding: 0 var(--grid-margin);
+  position: relative;
+}
+
+.line-rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  display: none;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@media (min-width: 1024px) {
+  .frame {
+    padding-left: calc(var(--grid-margin) + 40px);
+  }
+
+  .line-rail {
+    display: block;
+    left: var(--grid-margin);
+    width: 32px;
+    border-right: var(--rule-hairline-w) solid var(--rule);
+  }
+
+  .line-rail__num {
+    position: absolute;
+    left: 0;
+    width: 32px;
+    text-align: right;
+    padding-right: var(--space-2);
+    font-size: 0.6875rem;
+    color: var(--ink-muted);
+    opacity: 0.5;
+  }
+}
+
+@media print {
+  .line-rail {
+    display: none !important;
+  }
+}
+
+.content-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--grid-gutter);
+}
+
+@media (min-width: 768px) {
+  .content-grid {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-grid {
+    grid-template-columns: repeat(12, 1fr);
+  }
+}
+
+.col-full {
+  grid-column: 1 / -1;
+}
+
+/* ---------------------------------------------------------------------
+   Hairline system — §4.2. Carries over from Blueprint largely
+   unchanged: terminal UIs are natively flat.
+--------------------------------------------------------------------- */
+
+.rule {
+  border: none;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  margin: 0;
+}
+
+.rule--emphasis {
+  border-top-width: var(--rule-emphasis-w);
+  border-top-color: var(--rule-emphasis);
+}
+
+/* ---------------------------------------------------------------------
+   Header — wordmark as shell prompt, always-visible fallback nav
+   (never palette-only — PRD §1.2's explicit non-negotiable), palette
+   trigger hint.
+--------------------------------------------------------------------- */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg);
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.site-header__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  gap: var(--space-4);
+}
+
+.site-header.is-scrolled {
+  border-bottom-color: var(--rule-emphasis);
+}
+
+.primary-nav {
+  display: none;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.primary-nav a {
+  font-size: var(--text-small-size);
+  text-decoration: none;
+  color: var(--ink-muted);
+  padding: var(--space-2) 0;
+  border-bottom: var(--rule-hairline-w) solid transparent;
+  transition: color var(--motion-fast), border-color var(--motion-fast);
+}
+
+.primary-nav a:hover,
+.primary-nav a[aria-current="page"] {
+  color: var(--ink);
+  border-bottom-color: var(--signal);
+}
+
+@media (min-width: 768px) {
+  .primary-nav {
+    display: flex;
+  }
+
+  .nav-toggle {
+    display: none;
+  }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.palette-hint {
+  display: none;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+  background: none;
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  transition: border-color var(--motion-fast), color var(--motion-fast);
+}
+
+.palette-hint:hover {
+  border-color: var(--signal-info);
+  color: var(--ink);
+}
+
+.palette-hint kbd {
+  font-family: var(--face-mono);
+  font-size: 0.6875rem;
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: 1px 4px;
+}
+
+@media (min-width: 640px) {
+  .palette-hint {
+    display: inline-flex;
+  }
+}
+
+.theme-toggle {
+  font-size: var(--text-small-size);
+  background: none;
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  color: var(--ink);
+  transition: border-color var(--motion-fast);
+}
+
+.theme-toggle:hover {
+  border-color: var(--signal-info);
+}
+
+.nav-toggle {
+  font-size: var(--text-small-size);
+  background: none;
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+
+.mobile-nav {
+  display: none;
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.mobile-nav.is-open {
+  display: block;
+}
+
+.mobile-nav a {
+  display: block;
+  padding: var(--space-3) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  text-decoration: none;
+  color: var(--ink);
+  font-size: var(--text-small-size);
+}
+
+.mobile-nav__palette {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  color: var(--signal-info);
+  font-family: inherit;
+  font-size: var(--text-small-size);
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .mobile-nav {
+    display: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Metadata strip
+--------------------------------------------------------------------- */
+
+.meta-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  padding: var(--space-4) 0;
+}
+
+.meta-strip__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+  border-left: var(--rule-hairline-w) solid var(--rule);
+}
+
+.meta-strip__item:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+.meta-strip__item dt {
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.meta-strip__item dd {
+  font-size: var(--text-small-size);
+  margin: 0;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--signal);
+  border-radius: 50%;
+  margin-right: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  .meta-strip {
+    gap: var(--space-4);
+  }
+
+  .meta-strip__item {
+    padding-left: var(--space-4);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Work-tree entry — §7. Replaces Blueprint's project index row; the
+   file-tree listing for /work.
+--------------------------------------------------------------------- */
+
+.tree-entry {
+  display: block;
+  padding: var(--space-5) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.tree-entry:last-child {
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.tree-entry__top {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.tree-entry__branch {
+  color: var(--ink-muted);
+  user-select: none;
+}
+
+.tree-entry__path {
+  font-weight: 600;
+  color: var(--signal-info);
+  transition: color var(--motion-fast);
+}
+
+.tree-entry:hover .tree-entry__path,
+.tree-entry:focus-visible .tree-entry__path {
+  color: var(--signal);
+}
+
+.tree-entry__years {
+  margin-left: auto;
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.tree-entry__comment {
+  display: block;
+  margin-top: var(--space-2);
+  padding-left: var(--space-5);
+  color: var(--ink-muted);
+}
+
+.tree-entry__comment::before {
+  content: "# ";
+}
+
+.tree-entry__tags {
+  margin-top: var(--space-3);
+  padding-left: var(--space-5);
+}
+
+/* ---------------------------------------------------------------------
+   Tags — §7. 2px radius, same one exception as Blueprint.
+--------------------------------------------------------------------- */
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tag {
+  font-size: 0.75rem;
+  padding: var(--space-1) var(--space-2);
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  background: var(--bg);
+}
+
+.tag--interactive {
+  cursor: pointer;
+  transition: border-color var(--motion-fast), color var(--motion-fast);
+}
+
+.tag--interactive:hover,
+.tag--interactive[aria-pressed="true"] {
+  border-color: var(--signal-info);
+  color: var(--signal-info);
+}
+
+/* ---------------------------------------------------------------------
+   Case-study header
+--------------------------------------------------------------------- */
+
+.study-header {
+  padding: var(--space-7) 0 var(--space-6);
+}
+
+.study-header__invocation {
+  color: var(--ink-muted);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-small-size);
+}
+
+.study-header__title {
+  margin-bottom: var(--space-4);
+  max-width: 24ch;
+}
+
+.study-header__summary {
+  margin-bottom: var(--space-5);
+  color: var(--ink-muted);
+}
+
+.study-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  align-items: center;
+}
+
+/* ---------------------------------------------------------------------
+   Callout — §7. Left border only, --signal-info / --signal, never a
+   filled background.
+--------------------------------------------------------------------- */
+
+.callout {
+  border-left: var(--rule-emphasis-w) solid var(--signal-info);
+  padding: var(--space-1) 0 var(--space-1) var(--space-4);
+  margin: var(--space-6) 0;
+  max-width: 68ch;
+}
+
+.callout--decision {
+  border-left-color: var(--signal);
+}
+
+.callout p {
+  color: var(--ink);
+}
+
+.callout__label {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--ink-muted);
+}
+
+/* ---------------------------------------------------------------------
+   Code block
+--------------------------------------------------------------------- */
+
+.code-block {
+  font-size: var(--text-small-size);
+  background: var(--bg-raised);
+  border: var(--rule-hairline-w) solid var(--rule);
+  padding: var(--space-4);
+  overflow-x: auto;
+  white-space: pre;
+  margin: var(--space-5) 0;
+}
+
+/* ---------------------------------------------------------------------
+   Section prose
+--------------------------------------------------------------------- */
+
+.prose-section {
+  padding: var(--space-6) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+}
+
+.prose-section h3 {
+  margin-bottom: var(--space-4);
+}
+
+.prose-section__invocation {
+  display: block;
+  color: var(--ink-muted);
+  font-size: var(--text-small-size);
+  margin-bottom: var(--space-2);
+}
+
+.prose-section p + p {
+  margin-top: var(--space-4);
+}
+
+.prose-section ul {
+  margin: var(--space-4) 0 0;
+  padding-left: var(--space-5);
+  max-width: 68ch;
+}
+
+.prose-section li + li {
+  margin-top: var(--space-2);
+}
+
+/* ---------------------------------------------------------------------
+   Buttons + forms
+--------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-small-size);
+  padding: var(--space-3) var(--space-4);
+  border: var(--rule-hairline-w) solid var(--signal);
+  border-radius: 2px;
+  background: var(--signal);
+  color: var(--on-signal);
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity var(--motion-fast);
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.btn--outline {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--rule);
+}
+
+.btn--outline:hover {
+  border-color: var(--signal-info);
+  color: var(--signal-info);
+  opacity: 1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.field label {
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+}
+
+.field label::before {
+  content: "$ ";
+  color: var(--signal);
+}
+
+.field input,
+.field textarea {
+  font-family: var(--face-mono);
+  font-size: var(--text-body-size);
+  padding: var(--space-3);
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 0;
+  background: var(--bg-raised);
+  color: var(--ink);
+  transition: border-color var(--motion-fast);
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--signal-info);
+  outline: none;
+}
+
+.field--error input,
+.field--error textarea {
+  border-color: var(--danger);
+}
+
+.field__error {
+  font-size: 0.75rem;
+  color: var(--danger);
+}
+
+.field--honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.form-status {
+  font-size: var(--text-small-size);
+  padding: var(--space-3) var(--space-4);
+  border: var(--rule-hairline-w) solid var(--rule);
+  margin-top: var(--space-3);
+  display: none;
+}
+
+.form-status.is-visible {
+  display: block;
+}
+
+.form-status--success {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+
+.form-status--error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.form-status--rate-limited {
+  border-color: var(--ink-muted);
+  color: var(--ink-muted);
+}
+
+/* ---------------------------------------------------------------------
+   CV sections
+--------------------------------------------------------------------- */
+
+.cv-section {
+  padding: var(--space-6) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+}
+
+.cv-entry {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .cv-entry {
+    grid-template-columns: 180px 1fr;
+    gap: var(--space-5);
+  }
+}
+
+.cv-entry__dates {
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+}
+
+.cv-entry__title {
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.cv-entry__subtitle {
+  color: var(--ink-muted);
+  margin-bottom: var(--space-2);
+}
+
+/* ---------------------------------------------------------------------
+   Status strip — §6.2. Console's signature ambient element. Real
+   fields only, one slow pulse on the status glyph when passing.
+--------------------------------------------------------------------- */
+
+.status-strip {
+  border-top: var(--rule-emphasis-w) solid var(--rule);
+  padding: var(--space-3) 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+}
+
+.status-strip__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.status-strip__glyph {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--signal);
+  flex-shrink: 0;
+}
+
+.status-strip__glyph.is-failing {
+  background: var(--danger);
+}
+
+.status-strip__glyph.is-pulsing {
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-strip__glyph.is-pulsing {
+    animation: none !important;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .status-strip__item:not(:first-child) {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Footer
+--------------------------------------------------------------------- */
+
+.site-footer {
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  padding: var(--space-6) 0;
+  margin-top: var(--space-8);
+}
+
+.site-footer__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.site-footer__links {
+  display: flex;
+  gap: var(--space-5);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-footer__links a {
+  font-size: var(--text-small-size);
+  text-decoration: none;
+  color: var(--ink-muted);
+}
+
+.site-footer__links a:hover {
+  color: var(--signal-info);
+}
+
+.site-footer__built {
+  color: var(--ink-muted);
+}
+
+@media (max-width: 767px) {
+  .site-footer__row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Inline links — §7. Full underline always present at rest (mono
+   prose has no color/weight variety to fall back on for findability),
+   --signal-info at rest, shifts to --signal on hover.
+--------------------------------------------------------------------- */
+
+.prose-section a,
+.callout a,
+.site-footer__built a,
+p a {
+  color: var(--signal-info);
+  text-decoration: underline;
+  text-decoration-color: var(--signal-info);
+  text-underline-offset: 3px;
+  transition: color var(--motion-fast), text-decoration-color var(--motion-fast);
+}
+
+.prose-section a:hover,
+.callout a:hover,
+.site-footer__built a:hover,
+p a:hover {
+  color: var(--signal);
+  text-decoration-color: var(--signal);
+}
+
+/* ---------------------------------------------------------------------
+   404 / 500 — real shell-error treatment
+--------------------------------------------------------------------- */
+
+.error-page {
+  min-height: calc(100vh - 65px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--grid-margin);
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.error-page__prompt {
+  color: var(--ink-muted);
+  font-size: var(--text-small-size);
+}
+
+.error-page__message {
+  color: var(--danger);
+}
+
+/* ---------------------------------------------------------------------
+   Section title row
+--------------------------------------------------------------------- */
+
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--space-6) 0 var(--space-4);
+}
+
+/* ---------------------------------------------------------------------
+   Page hero
+--------------------------------------------------------------------- */
+
+.page-hero {
+  padding: var(--space-7) 0 var(--space-6);
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.page-hero p {
+  margin-top: var(--space-4);
+  color: var(--ink-muted);
+}
+
+/* ---------------------------------------------------------------------
+   Reduced motion — global guard
+--------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   utility
+--------------------------------------------------------------------- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+  margin: -1px;
+}

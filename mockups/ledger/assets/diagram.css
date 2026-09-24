@@ -1,0 +1,237 @@
+/*
+  Ledger diagram system — PRD-frontend-ledger.md §5.
+  Figure-and-footnote treatment: the same schema/interaction model as
+  both sibling directions, but the "why" is printed as an always-
+  visible numbered footnote list below the figure, not gated behind
+  hover. Hover/focus still works as an optional exploratory layer.
+*/
+
+.diagram-frame {
+  border: var(--rule-hairline-w) solid var(--rule);
+  margin: var(--space-6) 0;
+}
+
+.diagram-frame__caption {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+}
+
+.diagram-canvas-wrap {
+  padding: var(--space-5);
+  overflow-x: auto;
+}
+
+.diagram-canvas-wrap > svg {
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  height: auto;
+  max-width: 760px;
+}
+
+.diagram-canvas-wrap.is-compact > svg {
+  max-width: 520px;
+}
+
+/* --- nodes --- */
+
+.bp-node {
+  cursor: pointer;
+  outline: none;
+}
+
+.bp-node rect,
+.bp-node .node-shape {
+  fill: var(--bg);
+  stroke: var(--rule);
+  stroke-width: 1.5;
+  transition: stroke var(--motion-fast), opacity var(--motion-fast);
+  vector-effect: non-scaling-stroke;
+}
+
+.bp-node text {
+  font-family: var(--face-sans);
+  font-size: 12px;
+  fill: var(--ink);
+}
+
+.bp-node--external text {
+  font-style: italic;
+  fill: var(--ink-muted);
+}
+
+.bp-node--client rect {
+  fill: var(--signal-fill);
+}
+
+.bp-node--datastore .node-cap {
+  stroke: var(--rule);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.bp-node--queue rect {
+  stroke-dasharray: 4 3;
+}
+
+.bp-node .node-footnote {
+  font-family: var(--face-serif);
+  font-size: 13px;
+  fill: var(--signal);
+}
+
+.bp-node:hover rect,
+.bp-node:hover .node-shape,
+.bp-node.is-active rect,
+.bp-node.is-active .node-shape {
+  stroke: var(--signal);
+  stroke-width: 1.5;
+}
+
+.bp-node.is-active rect,
+.bp-node.is-active .node-shape {
+  stroke-width: 2;
+}
+
+.bp-node.is-dimmed {
+  opacity: 0.6;
+}
+
+.bp-node:focus-visible rect,
+.bp-node:focus-visible .node-shape {
+  stroke: var(--signal);
+  stroke-width: 2;
+}
+
+.bp-node:focus-visible {
+  outline: none;
+}
+
+.bp-node-hit {
+  fill: transparent !important;
+}
+
+/* --- edges --- */
+
+.bp-edge {
+  fill: none;
+  stroke: var(--ink-muted);
+  stroke-width: 1.5;
+  transition: opacity var(--motion-fast);
+  vector-effect: non-scaling-stroke;
+}
+
+.bp-edge.is-dimmed {
+  opacity: 0.6;
+}
+
+.bp-edge--auth {
+  stroke-dasharray: 2 3;
+}
+
+.bp-edge-label {
+  font-family: var(--face-mono);
+  font-size: 10px;
+  fill: var(--ink-muted);
+}
+
+.bp-edge-lock {
+  fill: var(--ink-muted);
+}
+
+/* --- the footnote list — always visible, the load-bearing structural
+   difference from both sibling directions. Not a toggle, not a
+   hover-only panel: this is the primary content, the diagram is what
+   illustrates it. --- */
+
+.diagram-footnotes {
+  padding: var(--space-5) var(--space-6);
+  border-top: var(--rule-hairline-w) solid var(--rule);
+}
+
+.diagram-footnotes__intro {
+  margin-bottom: var(--space-4);
+}
+
+.diagram-footnotes ol {
+  margin: 0;
+  padding-left: 1.4em;
+}
+
+.diagram-footnotes li {
+  padding: var(--space-3) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+}
+
+.diagram-footnotes li:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.diagram-footnotes li.is-highlighted {
+  background: var(--signal-fill);
+  margin: 0 calc(var(--space-3) * -1);
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
+}
+
+.diagram-footnotes__term {
+  font-family: var(--face-serif);
+  font-size: 1.0625rem;
+  color: var(--ink);
+}
+
+.diagram-footnotes__type {
+  color: var(--ink-muted);
+}
+
+.diagram-footnotes__block {
+  margin-top: var(--space-2);
+}
+
+.diagram-footnotes__block-label {
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
+.diagram-footnotes__block p {
+  color: var(--ink);
+  font-family: var(--face-sans);
+}
+
+/* --- linearized mobile renderer — a smaller adaptation here, since
+   the footnote list already reads as ordinary flowing content at any
+   width; only the diagram itself simplifies. --- */
+
+.diagram-linear {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+}
+
+.diagram-linear__node {
+  padding: var(--space-2) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  font-family: var(--face-serif);
+  font-size: 1.0625rem;
+}
+
+.diagram-linear__node:first-child {
+  border-top: none;
+}
+
+.diagram-linear__type {
+  font-family: var(--face-sans);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+}
+
+.diagram-linear__connector {
+  font-family: var(--face-mono);
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  padding: var(--space-1) 0 var(--space-1) var(--space-4);
+}

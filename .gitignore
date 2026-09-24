@@ -1,0 +1,6 @@
+.DS_Store
+.review/
+.impeccable/
+council-shots/
+node_modules/
+.env

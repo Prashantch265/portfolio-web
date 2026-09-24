@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%230A0C0F%27/%3E%3Crect x=%278%27 y=%2710%27 width=%276%27 height=%2712%27 fill=%27%233FB950%27/%3E%3Ctext x=%2717%27 y=%2722%27 font-family=%27monospace%27 font-weight=%27700%27 font-size=%2714%27 fill=%27%23C9D1D9%27%3EPC%3C/text%3E%3C/svg%3E" />
+  <title>cv — Prashant Chaudhary</title>
+  <link rel="stylesheet" href="assets/tokens.css?v=2" />
+  <link rel="stylesheet" href="assets/base.css?v=2" />
+  <link rel="stylesheet" href="assets/palette.css?v=2" />
+</head>
+<body>
+
+  <header class="site-header" data-site-header>
+    <div class="frame">
+      <div class="site-header__bar">
+        <a href="index.html" class="wordmark">prashant@chaudhary:~$</a>
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="work.html">work</a>
+          <a href="writing.html">writing</a>
+          <a href="stack.html">stack</a>
+          <a href="cv.html" aria-current="page">cv</a>
+        </nav>
+        <div class="header-actions">
+          <button class="palette-hint" data-palette-hint type="button">search <kbd>⌘K</kbd></button>
+          <button class="theme-toggle" data-theme-toggle type="button">dark</button>
+          <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="mobile-nav" type="button">menu</button>
+        </div>
+      </div>
+    </div>
+    <div class="mobile-nav" id="mobile-nav" data-mobile-nav>
+      <div class="frame">
+        <a href="work.html">work</a>
+        <a href="writing.html">writing</a>
+        <a href="stack.html">stack</a>
+        <a href="cv.html">cv</a>
+        <button class="mobile-nav__palette" data-mobile-palette-open type="button">search...</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- This page deliberately underplays the terminal conceit, PRD §8.2:
+       no command-invocation styling, no tree-view treatment. An
+       admissions committee or recruiter needs to read this fastest,
+       with zero decoding overhead. -->
+  <main>
+    <div class="frame">
+      <div class="page-hero">
+        <h1 class="text-display" style="font-size: var(--text-h2-size); font-weight:600;" id="cv-headline"></h1>
+        <p id="cv-summary"></p>
+      </div>
+
+      <section class="cv-section" aria-labelledby="cv-experience-heading">
+        <h2 id="cv-experience-heading" class="text-h3" style="margin-bottom:var(--space-5);">experience</h2>
+        <div id="cv-experience"></div>
+      </section>
+
+      <section class="cv-section" aria-labelledby="cv-education-heading">
+        <h2 id="cv-education-heading" class="text-h3" style="margin-bottom:var(--space-5);">education</h2>
+        <div id="cv-education"></div>
+      </section>
+
+      <section class="cv-section" aria-labelledby="cv-cert-heading">
+        <h2 id="cv-cert-heading" class="text-h3" style="margin-bottom:var(--space-5);">certifications &amp; accomplishments</h2>
+        <div id="cv-certs"></div>
+      </section>
+
+      <section class="cv-section" aria-labelledby="cv-gate-heading">
+        <h2 id="cv-gate-heading" class="text-h3">request the full CV</h2>
+        <p style="margin-top:var(--space-3); color:var(--ink-muted); max-width:56ch;">
+          The version above is the public summary. A more detailed PDF —
+          the same document, more dates and detail — is sent as a
+          single-use, expiring link once approved.
+        </p>
+        <form data-cv-form style="margin-top:var(--space-5); max-width:420px;">
+          <div class="field">
+            <label for="cv-email">email</label>
+            <input id="cv-email" name="email" type="email" required autocomplete="email" />
+          </div>
+          <div class="field field--honeypot" aria-hidden="true">
+            <label for="cv-company">company</label>
+            <input id="cv-company" name="company" type="text" tabindex="-1" autocomplete="off" data-honeypot />
+          </div>
+          <button class="btn" type="submit">request cv</button>
+          <div class="form-status" data-form-status role="status"></div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="frame">
+      <hr class="rule" />
+      <div class="status-strip" data-status-strip style="margin-top: var(--space-4);"></div>
+      <div class="site-footer__row" style="margin-top: var(--space-5);">
+        <p class="text-small">© <span data-year></span> prashant chaudhary. kathmandu, nepal.</p>
+        <ul class="site-footer__links">
+          <li><a href="mailto:prashantchy265@gmail.com">email</a></li>
+          <li><a href="https://github.com/Prashantch265" target="_blank" rel="noreferrer">github</a></li>
+          <li><a href="https://linkedin.com/in/prashant-ch265" target="_blank" rel="noreferrer">linkedin</a></li>
+          <li><a href="brand.html">design notes</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/data-console.js?v=2"></script>
+  <script src="assets/app.js?v=2"></script>
+  <script>
+    (function () {
+      var cv = window.SITE_DATA.cv;
+
+      document.getElementById("cv-headline").textContent = cv.headline;
+      document.getElementById("cv-summary").textContent = cv.summary + " " + cv.location + " · " + cv.yearsExperience + ".";
+
+      function entry(e) {
+        return (
+          '<div class="cv-entry"><div class="cv-entry__dates">' + e.dates + "</div><div>" +
+          '<div class="cv-entry__title">' + e.title + "</div>" +
+          '<div class="cv-entry__subtitle">' + e.subtitle + "</div>" +
+          "<p>" + e.body + "</p></div></div>"
+        );
+      }
+
+      document.getElementById("cv-experience").innerHTML = cv.experience.map(entry).join("");
+      document.getElementById("cv-education").innerHTML = cv.education.map(entry).join("");
+
+      var certsHtml = cv.certifications
+        .concat(cv.accomplishments)
+        .map(function (c) {
+          return (
+            '<div class="cv-entry"><div class="cv-entry__dates"></div><div>' +
+            '<div class="cv-entry__title">' + c.title + "</div>" +
+            '<div class="cv-entry__subtitle">' + c.subtitle + "</div></div></div>"
+          );
+        })
+        .join("");
+      document.getElementById("cv-certs").innerHTML = certsHtml;
+    })();
+  </script>
+</body>
+</html>

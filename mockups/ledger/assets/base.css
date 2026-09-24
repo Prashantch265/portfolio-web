@@ -1,0 +1,905 @@
+/*
+  Ledger base system — PRD-frontend-ledger.md §4, §6, §7.
+  Serif display, sans body at genuinely comfortable reading settings,
+  mono strictly scoped to metadata. No visible grid device — restraint
+  itself is the signature move. Tokens only.
+*/
+
+/* ---------------------------------------------------------------------
+   Reset + foundations
+--------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--face-sans);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-lh);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: var(--signal);
+  color: var(--on-signal);
+}
+
+* {
+  scrollbar-color: var(--rule) var(--bg);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border: 2px solid var(--bg);
+  border-radius: 0;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: var(--rule-emphasis-w) solid var(--signal);
+  outline-offset: 3px;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+::placeholder {
+  color: var(--ink-muted);
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------
+   Typography — §4.3. Serif for display, sans for body, mono strictly
+   for metadata. The serif never appears in UI chrome; the mono never
+   appears in running prose.
+--------------------------------------------------------------------- */
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--face-serif);
+  font-weight: 400;
+  text-wrap: balance;
+}
+
+.text-display {
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-lh);
+}
+
+.text-h2 {
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-lh);
+}
+
+.text-h3 {
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-lh);
+}
+
+p {
+  margin: 0;
+  max-width: var(--prose-measure);
+  font-family: var(--face-sans);
+}
+
+.text-body-lg {
+  font-size: var(--text-body-lg-size);
+  line-height: var(--text-body-lg-lh);
+}
+
+.text-small {
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-lh);
+  color: var(--ink-muted);
+}
+
+.label {
+  font-family: var(--face-mono);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-lh);
+  letter-spacing: var(--text-label-tracking);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.mono-meta {
+  font-family: var(--face-mono);
+  font-size: var(--text-mono-size);
+  line-height: var(--text-mono-lh);
+}
+
+.wordmark {
+  font-family: var(--face-serif);
+  font-size: 1.375rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------
+   Grid — §4.1. Governs layout only, never rendered as a device.
+--------------------------------------------------------------------- */
+
+.frame {
+  max-width: var(--grid-max);
+  margin: 0 auto;
+  padding: 0 var(--grid-margin);
+  position: relative;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--grid-gutter);
+}
+
+@media (min-width: 768px) {
+  .content-grid {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-grid {
+    grid-template-columns: repeat(12, 1fr);
+  }
+}
+
+.col-full {
+  grid-column: 1 / -1;
+}
+
+/* prose column: the real constraint in this direction, independent
+   of the page grid */
+.prose {
+  max-width: var(--prose-measure);
+}
+
+/* ---------------------------------------------------------------------
+   Hairline system — §4.2
+--------------------------------------------------------------------- */
+
+.rule {
+  border: none;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  margin: 0;
+}
+
+.rule--emphasis {
+  border-top-width: var(--rule-emphasis-w);
+  border-top-color: var(--rule-emphasis);
+}
+
+/* ---------------------------------------------------------------------
+   Header / nav — plain, conventional, no signature device
+--------------------------------------------------------------------- */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg);
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.site-header__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 76px;
+}
+
+.site-header.is-scrolled {
+  border-bottom-color: var(--rule-emphasis);
+}
+
+.primary-nav {
+  display: none;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.primary-nav a {
+  font-family: var(--face-sans);
+  font-size: 0.9375rem;
+  text-decoration: none;
+  color: var(--ink-muted);
+  padding: var(--space-2) 0;
+  border-bottom: var(--rule-hairline-w) solid transparent;
+  transition: color var(--motion-fast), border-color var(--motion-fast);
+}
+
+.primary-nav a:hover,
+.primary-nav a[aria-current="page"] {
+  color: var(--ink);
+  border-bottom-color: var(--signal);
+}
+
+@media (min-width: 768px) {
+  .primary-nav {
+    display: flex;
+  }
+
+  .nav-toggle {
+    display: none;
+  }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.nav-toggle {
+  font-family: var(--face-sans);
+  font-size: 0.9375rem;
+  background: none;
+  border: var(--rule-hairline-w) solid var(--rule);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+
+.mobile-nav {
+  display: none;
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.mobile-nav.is-open {
+  display: block;
+}
+
+.mobile-nav a {
+  display: block;
+  padding: var(--space-3) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 0.9375rem;
+}
+
+@media (min-width: 768px) {
+  .mobile-nav {
+    display: none !important;
+  }
+}
+
+.theme-toggle {
+  background: none;
+  border: var(--rule-hairline-w) solid var(--rule);
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--ink);
+  transition: border-color var(--motion-fast);
+}
+
+.theme-toggle:hover {
+  border-color: var(--signal);
+}
+
+.theme-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.theme-toggle .icon-moon {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle .icon-sun {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle .icon-moon {
+  display: block;
+}
+
+/* ---------------------------------------------------------------------
+   Metadata strip
+--------------------------------------------------------------------- */
+
+.meta-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  padding: var(--space-4) 0;
+}
+
+.meta-strip__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+  border-left: var(--rule-hairline-w) solid var(--rule);
+}
+
+.meta-strip__item:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+.meta-strip__item dt {
+  font-family: var(--face-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.meta-strip__item dd {
+  font-family: var(--face-mono);
+  font-size: var(--text-mono-size);
+  margin: 0;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--success);
+  border-radius: 50%;
+  margin-right: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  .meta-strip {
+    gap: var(--space-4);
+  }
+
+  .meta-strip__item {
+    padding-left: var(--space-4);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Project row — plain, no tree/card device
+--------------------------------------------------------------------- */
+
+.project-row {
+  display: block;
+  padding: var(--space-6) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.project-row:last-child {
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.project-row__title {
+  font-family: var(--face-serif);
+  font-size: 1.75rem;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
+  transition: text-decoration-color var(--motion-fast), color var(--motion-fast);
+}
+
+.project-row:hover .project-row__title,
+.project-row:focus-visible .project-row__title {
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+  color: var(--signal);
+}
+
+.project-row__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.project-row__years {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.project-row__summary {
+  color: var(--ink-muted);
+  margin-bottom: var(--space-3);
+  font-family: var(--face-sans);
+}
+
+@media (max-width: 767px) {
+  .project-row__top {
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Tags — §7
+--------------------------------------------------------------------- */
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tag {
+  font-family: var(--face-mono);
+  font-size: 0.75rem;
+  padding: var(--space-1) var(--space-2);
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  background: var(--bg);
+}
+
+.tag--interactive {
+  cursor: pointer;
+  transition: border-color var(--motion-fast), color var(--motion-fast);
+}
+
+.tag--interactive:hover,
+.tag--interactive[aria-pressed="true"] {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+
+/* ---------------------------------------------------------------------
+   Case-study header — the one permitted kicker, §7's explicit note
+--------------------------------------------------------------------- */
+
+.study-header {
+  padding: var(--space-7) 0 var(--space-6);
+}
+
+.study-header__kicker {
+  margin-bottom: var(--space-3);
+}
+
+.study-header__title {
+  margin-bottom: var(--space-4);
+  max-width: 20ch;
+  font-family: var(--face-serif);
+}
+
+.study-header__summary {
+  margin-bottom: var(--space-5);
+  color: var(--ink-muted);
+}
+
+.study-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  align-items: center;
+}
+
+/* ---------------------------------------------------------------------
+   Pull-quote — §7. The contested-decision narrative rendered as a
+   genuine editorial pull-quote, not a bordered callout box.
+--------------------------------------------------------------------- */
+
+.pull-quote {
+  border-left: var(--rule-emphasis-w) solid var(--signal);
+  background: var(--signal-fill);
+  padding: var(--space-5) var(--space-6);
+  margin: var(--space-6) 0;
+  max-width: var(--prose-measure);
+}
+
+.pull-quote__label {
+  display: block;
+  margin-bottom: var(--space-3);
+}
+
+.pull-quote__text {
+  font-family: var(--face-serif);
+  font-size: 1.5rem;
+  line-height: 1.4;
+  color: var(--ink);
+  margin: 0;
+  max-width: none;
+}
+
+.pull-quote__attribution {
+  display: block;
+  margin-top: var(--space-4);
+  color: var(--ink-muted);
+}
+
+/* ---------------------------------------------------------------------
+   Code block
+--------------------------------------------------------------------- */
+
+.code-block {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  background: var(--bg-raised);
+  border: var(--rule-hairline-w) solid var(--rule);
+  padding: var(--space-4);
+  overflow-x: auto;
+  white-space: pre;
+  margin: var(--space-5) 0;
+}
+
+/* ---------------------------------------------------------------------
+   Section prose
+--------------------------------------------------------------------- */
+
+.prose-section {
+  padding: var(--space-7) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+}
+
+.prose-section h3 {
+  margin-bottom: var(--space-4);
+}
+
+.prose-section p + p {
+  margin-top: var(--space-5);
+}
+
+.prose-section ul {
+  margin: var(--space-5) 0 0;
+  padding-left: var(--space-5);
+  max-width: var(--prose-measure);
+  font-family: var(--face-sans);
+}
+
+.prose-section li + li {
+  margin-top: var(--space-3);
+}
+
+/* ---------------------------------------------------------------------
+   Buttons + forms
+--------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--face-sans);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  padding: var(--space-3) var(--space-5);
+  border: var(--rule-hairline-w) solid var(--ink);
+  border-radius: 2px;
+  background: var(--ink);
+  color: var(--bg);
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity var(--motion-fast);
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.btn--outline {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--rule);
+}
+
+.btn--outline:hover {
+  border-color: var(--signal);
+  color: var(--signal);
+  opacity: 1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.field label {
+  font-family: var(--face-sans);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+}
+
+.field input,
+.field textarea {
+  font-family: var(--face-sans);
+  font-size: var(--text-body-size);
+  padding: var(--space-3);
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 0;
+  background: var(--bg);
+  color: var(--ink);
+  transition: border-color var(--motion-fast);
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--signal);
+  outline: none;
+}
+
+.field--error input,
+.field--error textarea {
+  border-color: var(--danger);
+}
+
+.field__error {
+  font-family: var(--face-sans);
+  font-size: 0.8125rem;
+  color: var(--danger);
+}
+
+.field--honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.form-status {
+  font-family: var(--face-sans);
+  font-size: var(--text-small-size);
+  padding: var(--space-3) var(--space-4);
+  border: var(--rule-hairline-w) solid var(--rule);
+  margin-top: var(--space-3);
+  display: none;
+}
+
+.form-status.is-visible {
+  display: block;
+}
+
+.form-status--success {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.form-status--error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.form-status--rate-limited {
+  border-color: var(--ink-muted);
+  color: var(--ink-muted);
+}
+
+/* ---------------------------------------------------------------------
+   CV sections
+--------------------------------------------------------------------- */
+
+.cv-section {
+  padding: var(--space-7) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+}
+
+.cv-entry {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .cv-entry {
+    grid-template-columns: 200px 1fr;
+    gap: var(--space-5);
+  }
+}
+
+.cv-entry__dates {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+}
+
+.cv-entry__title {
+  font-family: var(--face-serif);
+  font-size: 1.125rem;
+  margin-bottom: var(--space-1);
+}
+
+.cv-entry__subtitle {
+  color: var(--ink-muted);
+  margin-bottom: var(--space-2);
+  font-family: var(--face-sans);
+}
+
+/* ---------------------------------------------------------------------
+   Footer
+--------------------------------------------------------------------- */
+
+.site-footer {
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  padding: var(--space-6) 0;
+  margin-top: var(--space-8);
+}
+
+.site-footer__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.site-footer__links {
+  display: flex;
+  gap: var(--space-5);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-footer__links a {
+  font-family: var(--face-sans);
+  font-size: var(--text-small-size);
+  text-decoration: none;
+  color: var(--ink-muted);
+}
+
+.site-footer__links a:hover {
+  color: var(--signal);
+}
+
+.site-footer__built {
+  color: var(--ink-muted);
+  font-family: var(--face-sans);
+}
+
+@media (max-width: 767px) {
+  .site-footer__row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Inline links — the most conventional treatment of the three
+   directions, deliberately
+--------------------------------------------------------------------- */
+
+.prose-section a,
+.pull-quote a,
+.cv-entry a,
+p a {
+  color: var(--signal);
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+  text-underline-offset: 3px;
+  transition: color var(--motion-fast), text-decoration-color var(--motion-fast);
+}
+
+.prose-section a:hover,
+.pull-quote a:hover,
+.cv-entry a:hover,
+p a:hover {
+  color: var(--rule-emphasis);
+  filter: brightness(0.85);
+}
+
+/* ---------------------------------------------------------------------
+   404 / 500 — the plainest of the three directions' error pages
+--------------------------------------------------------------------- */
+
+.error-page {
+  min-height: calc(100vh - 77px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-5);
+  padding: var(--space-8) var(--grid-margin);
+}
+
+
+/* ---------------------------------------------------------------------
+   Section title row
+--------------------------------------------------------------------- */
+
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--space-6) 0 var(--space-4);
+}
+
+/* ---------------------------------------------------------------------
+   Page hero
+--------------------------------------------------------------------- */
+
+.page-hero {
+  padding: var(--space-7) 0 var(--space-6);
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.page-hero p {
+  margin-top: var(--space-4);
+  color: var(--ink-muted);
+}
+
+/* ---------------------------------------------------------------------
+   Entrance fade — §6. The entire non-hover motion budget.
+--------------------------------------------------------------------- */
+
+.fade-in {
+  opacity: 0;
+}
+
+.fade-in.is-visible {
+  opacity: 1;
+  transition: opacity var(--motion-entrance) var(--ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in {
+    opacity: 1 !important;
+    transition: none !important;
+  }
+
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   utility
+--------------------------------------------------------------------- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+  margin: -1px;
+}

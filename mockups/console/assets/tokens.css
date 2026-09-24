@@ -1,0 +1,128 @@
+/*
+  Console design tokens — PRD-frontend-console.md §4.
+  One token file. No raw hex/px outside this file.
+*/
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/jetbrains-mono-variable.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* §4.4 color tokens — dark is default and design-of-record */
+  --bg: #0A0C0F;
+  --bg-raised: #10131A;
+  --ink: #C9D1D9;
+  --ink-muted: #7B8794;
+  --rule: #1C2128;
+  --rule-emphasis: #2D333B;
+  --signal: #3FB950;
+  --signal-info: #58A6FF;
+  --signal-fill: #0D2818;
+  --danger: #F85149;
+  --on-signal: #05170B;
+
+  /* §4.1 grid — same math as Blueprint, different visible expression */
+  --grid-max: 1200px;
+  --grid-margin: 64px;
+  --grid-gutter: 24px;
+  --grid-columns: 12;
+
+  /* §4.2 hairline system */
+  --rule-hairline-w: 1px;
+  --rule-emphasis-w: 1.5px;
+
+  /* §4.5 spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 48px;
+  --space-7: 64px;
+  --space-8: 96px;
+
+  /* §4.3 type — single mono face, hierarchy from size/weight only */
+  --face-mono: "JetBrains Mono", "SF Mono", "Menlo", monospace;
+
+  --text-display-size: 3.5rem;
+  --text-display-lh: 1.15;
+  --text-display-weight: 700;
+
+  --text-h2-size: 2rem;
+  --text-h2-lh: 1.2;
+
+  --text-h3-size: 1.25rem;
+  --text-h3-lh: 1.3;
+
+  --text-body-lg-size: 1.125rem;
+  --text-body-lg-lh: 1.6;
+
+  --text-body-size: 0.9375rem;
+  --text-body-lh: 1.65;
+
+  --text-small-size: 0.8125rem;
+  --text-small-lh: 1.5;
+
+  --text-prompt-size: 0.75rem;
+  --text-prompt-lh: 1.4;
+  --text-prompt-tracking: 0.04em;
+
+  /* §6 motion */
+  --motion-fast: 120ms;
+  --motion-typewriter-cps: 40; /* characters per second */
+  --motion-palette: 150ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* light mode — second-class pass, independently tuned, not inverted */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #F6F8FA;
+    --bg-raised: #FFFFFF;
+    --ink: #1A1F26;
+    --ink-muted: #5A6470;
+    --rule: #D0D7DE;
+    --rule-emphasis: #B8C0C8;
+    --signal: #1A7F37;
+    --signal-info: #0969DA;
+    --signal-fill: #DAFBE1;
+    --danger: #CF222E;
+    --on-signal: #FFFFFF;
+  }
+}
+
+:root[data-theme="light"] {
+  --bg: #F6F8FA;
+  --bg-raised: #FFFFFF;
+  --ink: #1A1F26;
+  --ink-muted: #5A6470;
+  --rule: #D0D7DE;
+  --rule-emphasis: #B8C0C8;
+  --signal: #1A7F37;
+  --signal-info: #0969DA;
+  --signal-fill: #DAFBE1;
+  --danger: #CF222E;
+  --on-signal: #FFFFFF;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --text-display-size: 2rem;
+    --text-h2-size: 1.5rem;
+    --text-h3-size: 1.125rem;
+    --text-body-lg-size: 1.0625rem;
+    --grid-margin: 20px;
+    --grid-gutter: 16px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  :root {
+    --grid-margin: 32px;
+    --grid-gutter: 20px;
+  }
+}

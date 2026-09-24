@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%231B5E9E%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-family=%27monospace%27 font-weight=%27700%27 font-size=%2715%27 fill=%27white%27 text-anchor=%27middle%27%3EPC%3C/text%3E%3C/svg%3E" />
+  <title>Design system — Prashant Chaudhary</title>
+  <link rel="stylesheet" href="assets/tokens.css?v=2" />
+  <link rel="stylesheet" href="assets/base.css?v=2" />
+  <link rel="stylesheet" href="assets/diagram.css?v=2" />
+  <style>
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: var(--space-4);
+      margin-top: var(--space-5);
+    }
+    .swatch {
+      border: var(--rule-hairline-w) solid var(--rule);
+    }
+    .swatch__color {
+      height: 72px;
+      border-bottom: var(--rule-hairline-w) solid var(--rule);
+    }
+    .swatch__meta {
+      padding: var(--space-3);
+    }
+    .swatch__name {
+      font-family: var(--face-mono);
+      font-size: 0.75rem;
+    }
+    .swatch__value {
+      font-family: var(--face-mono);
+      font-size: 0.6875rem;
+      color: var(--ink-muted);
+      margin-top: var(--space-1);
+    }
+    .type-row {
+      padding: var(--space-5) 0;
+      border-top: var(--rule-hairline-w) solid var(--rule);
+    }
+    .type-row__label {
+      margin-bottom: var(--space-3);
+    }
+    .space-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-2) 0;
+    }
+    .space-row__bar {
+      background: var(--signal);
+      height: 12px;
+    }
+    .space-row__label {
+      font-family: var(--face-mono);
+      font-size: var(--text-small-size);
+      color: var(--ink-muted);
+      min-width: 120px;
+    }
+    .monogram-wrap {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+      flex-wrap: wrap;
+    }
+    .motion-demo-box {
+      width: 64px;
+      height: 64px;
+      border: var(--rule-hairline-w) solid var(--rule-emphasis);
+      background: var(--signal-fill);
+    }
+    .motion-demo-box.is-playing {
+      animation: bp-node-in var(--motion-node) var(--ease-standard);
+    }
+    .taxonomy-block {
+      margin-top: var(--space-5);
+    }
+    /* documentation specimens don't need the interactive annotation
+       panel's text — the node labels are the documentation */
+    #node-taxonomy .bp-annotation,
+    #edge-taxonomy .bp-annotation {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header" data-site-header>
+    <div class="frame">
+      <div class="site-header__bar">
+        <a href="index.html" class="wordmark">Prashant Chaudhary</a>
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="work.html">Work</a>
+          <a href="writing.html">Writing</a>
+          <a href="stack.html">Stack</a>
+          <a href="cv.html">CV</a>
+        </nav>
+        <div class="header-actions">
+          <button class="theme-toggle" data-theme-toggle aria-label="Toggle color theme" type="button">
+            <svg class="icon-sun" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.3"/><g stroke="currentColor" stroke-width="1.3"><line x1="8" y1="0.5" x2="8" y2="2.5"/><line x1="8" y1="13.5" x2="8" y2="15.5"/><line x1="0.5" y1="8" x2="2.5" y2="8"/><line x1="13.5" y1="8" x2="15.5" y2="8"/><line x1="2.6" y1="2.6" x2="4" y2="4"/><line x1="12" y1="12" x2="13.4" y2="13.4"/><line x1="2.6" y1="13.4" x2="4" y2="12"/><line x1="12" y1="4" x2="13.4" y2="2.6"/></g></svg>
+            <svg class="icon-moon" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.5A6 6 0 1 1 6.5 2.5a5 5 0 0 0 7 7z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+          </button>
+          <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="mobile-nav" type="button">MENU</button>
+        </div>
+      </div>
+    </div>
+    <div class="mobile-nav" id="mobile-nav" data-mobile-nav>
+      <div class="frame">
+        <a href="work.html">Work</a>
+        <a href="writing.html">Writing</a>
+        <a href="stack.html">Stack</a>
+        <a href="cv.html">CV</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="frame">
+      <div class="grid-guides" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <div class="page-hero">
+        <h1 class="text-display" style="font-size: var(--text-h2-size);">Blueprint design system</h1>
+        <p style="max-width:60ch;">Tokens, type, the monogram's construction grid, and the diagram taxonomy this whole site is built from — PRD-frontend-blueprint.md §3–§6, rendered live.</p>
+      </div>
+
+      <!-- monogram -->
+      <section class="prose-section">
+        <h2 class="text-h3">Monogram</h2>
+        <div class="monogram-wrap" style="margin-top:var(--space-5);">
+          <svg width="160" height="160" viewBox="0 0 160 160" aria-label="PC monogram on its construction grid">
+            <g stroke="var(--rule)" stroke-width="1">
+              <line x1="0" y1="40" x2="160" y2="40" />
+              <line x1="0" y1="80" x2="160" y2="80" />
+              <line x1="0" y1="120" x2="160" y2="120" />
+              <line x1="40" y1="0" x2="40" y2="160" />
+              <line x1="80" y1="0" x2="80" y2="160" />
+              <line x1="120" y1="0" x2="120" y2="160" />
+              <rect x="0" y="0" width="160" height="160" fill="none" />
+            </g>
+            <line x1="8" y1="152" x2="152" y2="8" stroke="var(--rule-emphasis)" stroke-width="1.5" />
+            <text x="80" y="96" text-anchor="middle" font-family="var(--face-mono)" font-weight="600" font-size="52" fill="var(--ink)">PC</text>
+          </svg>
+          <div>
+            <p class="mono-meta text-small">4×4 unit construction grid.</p>
+            <p class="mono-meta text-small" style="margin-top:var(--space-2);">Diagonal cut echoes the diagram system's orthogonal-plus-one-cut-line vocabulary (external-node corner-cut, §5.2).</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- color tokens -->
+      <section class="prose-section">
+        <h2 class="text-h3">Color tokens</h2>
+        <p style="margin-top:var(--space-3); color:var(--ink-muted);">Toggle theme (top right) — swatches read live computed values, independently tuned per mode, not inverted.</p>
+        <div class="swatch-grid" id="swatch-grid"></div>
+      </section>
+
+      <!-- type scale -->
+      <section class="prose-section">
+        <h2 class="text-h3">Type scale</h2>
+        <div class="type-row">
+          <div class="label type-row__label">Display / H1 · 4.5 / 2.5rem</div>
+          <div class="text-display">Systems, shaped on purpose.</div>
+        </div>
+        <div class="type-row">
+          <div class="label type-row__label">H2 — 2.5rem / 1.75rem mobile</div>
+          <div class="text-h2">Systems, shaped on purpose.</div>
+        </div>
+        <div class="type-row">
+          <div class="label type-row__label">H3 — 1.5rem / 1.25rem mobile</div>
+          <div class="text-h3">Systems, shaped on purpose.</div>
+        </div>
+        <div class="type-row">
+          <div class="label type-row__label">Body large — 1.25rem</div>
+          <p class="text-body-lg">Every named piece of the stack is anchored to a project — not a list of technologies with no story attached.</p>
+        </div>
+        <div class="type-row">
+          <div class="label type-row__label">Body — 1rem</div>
+          <p>Every named piece of the stack is anchored to a project — not a list of technologies with no story attached.</p>
+        </div>
+        <div class="type-row">
+          <div class="label type-row__label">Small / caption — 0.875rem</div>
+          <p class="text-small">Every named piece of the stack is anchored to a project.</p>
+        </div>
+        <div class="type-row">
+          <div class="label type-row__label">Label · 0.75rem mono</div>
+          <span class="label">CASE STUDY</span>
+        </div>
+        <div class="type-row">
+          <div class="label type-row__label">Mono metadata — 0.875rem</div>
+          <span class="mono-meta">2023–2024 · NestJS · PostgreSQL → ClickHouse</span>
+        </div>
+      </section>
+
+      <!-- spacing scale -->
+      <section class="prose-section">
+        <h2 class="text-h3">Spacing scale — 4px base</h2>
+        <div style="margin-top:var(--space-4);">
+          <div class="space-row"><span class="space-row__label">--space-1 · 4px</span><div class="space-row__bar" style="width:var(--space-1);"></div></div>
+          <div class="space-row"><span class="space-row__label">--space-2 · 8px</span><div class="space-row__bar" style="width:var(--space-2);"></div></div>
+          <div class="space-row"><span class="space-row__label">--space-3 · 16px</span><div class="space-row__bar" style="width:var(--space-3);"></div></div>
+          <div class="space-row"><span class="space-row__label">--space-4 · 24px</span><div class="space-row__bar" style="width:var(--space-4);"></div></div>
+          <div class="space-row"><span class="space-row__label">--space-5 · 32px</span><div class="space-row__bar" style="width:var(--space-5);"></div></div>
+          <div class="space-row"><span class="space-row__label">--space-6 · 48px</span><div class="space-row__bar" style="width:var(--space-6);"></div></div>
+          <div class="space-row"><span class="space-row__label">--space-7 · 64px</span><div class="space-row__bar" style="width:var(--space-7);"></div></div>
+          <div class="space-row"><span class="space-row__label">--space-8 · 96px</span><div class="space-row__bar" style="width:var(--space-8);"></div></div>
+        </div>
+      </section>
+
+      <!-- node taxonomy -->
+      <section class="prose-section">
+        <h2 class="text-h3">Diagram node taxonomy — §5.2</h2>
+        <div class="diagram-frame taxonomy-block">
+          <div class="diagram-frame__toolbar">
+            <span class="diagram-frame__caption">One of each node type, unconnected</span>
+          </div>
+          <div class="diagram-canvas-wrap" id="node-taxonomy"></div>
+        </div>
+      </section>
+
+      <!-- edge taxonomy -->
+      <section class="prose-section">
+        <h2 class="text-h3">Diagram edge taxonomy — §5.3</h2>
+        <div class="diagram-frame taxonomy-block">
+          <div class="diagram-frame__toolbar">
+            <span class="diagram-frame__caption">Sync, async, data read/write, auth check</span>
+          </div>
+          <div class="diagram-canvas-wrap" id="edge-taxonomy"></div>
+        </div>
+      </section>
+
+      <!-- motion -->
+      <section class="prose-section">
+        <h2 class="text-h3">Motion — §6</h2>
+        <p style="margin-top:var(--space-3); max-width:60ch; color:var(--ink-muted);">
+          Used exactly twice on the live site: the diagram node draw-in
+          (below — replayable) and the one-time header rule extension
+          (visible on first visit to the home page). Everything else is
+          a ≤120ms opacity/border-color transition.
+        </p>
+        <div style="display:flex; align-items:center; gap:var(--space-5); margin-top:var(--space-5);">
+          <div class="motion-demo-box" id="motion-demo"></div>
+          <button class="btn btn--outline" id="motion-replay" type="button">Replay draw-in</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="frame">
+      <hr class="rule" />
+      <div class="site-footer__row" style="margin-top: var(--space-5);">
+        <p class="text-small">© <span data-year></span> Prashant Chaudhary. Kathmandu, Nepal.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/diagram.js?v=2"></script>
+  <script src="assets/app.js?v=2"></script>
+  <script>
+    (function () {
+      var tokenNames = [
+        "--bg", "--bg-raised", "--ink", "--ink-muted", "--rule",
+        "--rule-emphasis", "--signal", "--signal-fill", "--danger", "--success"
+      ];
+      var styles = getComputedStyle(document.documentElement);
+      var grid = document.getElementById("swatch-grid");
+
+      function paintSwatches() {
+        var s = getComputedStyle(document.documentElement);
+        grid.innerHTML = tokenNames
+          .map(function (name) {
+            var value = s.getPropertyValue(name).trim();
+            return (
+              '<div class="swatch"><div class="swatch__color" style="background:' + value + ';"></div>' +
+              '<div class="swatch__meta"><div class="swatch__name">' + name + '</div>' +
+              '<div class="swatch__value">' + value + "</div></div></div>"
+            );
+          })
+          .join("");
+      }
+      paintSwatches();
+
+      var themeToggle = document.querySelector("[data-theme-toggle]");
+      if (themeToggle) themeToggle.addEventListener("click", function () { setTimeout(paintSwatches, 0); });
+
+      // node taxonomy — one of each type, no edges
+      var nodeTaxonomy = {
+        nodes: [
+          { id: "n1", type: "service", label: "Service", col: 0, row: 0, annotation: { role: "A service node.", reasoning: null, alternative: null } },
+          { id: "n2", type: "datastore", label: "Datastore", col: 1, row: 0, annotation: { role: "A datastore node.", reasoning: null, alternative: null } },
+          { id: "n3", type: "queue", label: "Workflow / queue", col: 2, row: 0, annotation: { role: "A queue or workflow orchestrator node.", reasoning: null, alternative: null } },
+          { id: "n4", type: "external", label: "External", col: 3, row: 0, annotation: { role: "A third-party or external system node.", reasoning: null, alternative: null } },
+          { id: "n5", type: "client", label: "Client", col: 4, row: 0, annotation: { role: "A client node.", reasoning: null, alternative: null } }
+        ],
+        edges: []
+      };
+
+      var edgeTaxonomy = {
+        nodes: [
+          { id: "a1", type: "service", label: "A", col: 0, row: 0, annotation: { role: "", reasoning: null, alternative: null } },
+          { id: "b1", type: "service", label: "sync", col: 1, row: 0, annotation: { role: "", reasoning: null, alternative: null } },
+          { id: "a2", type: "service", label: "A", col: 0, row: 1, annotation: { role: "", reasoning: null, alternative: null } },
+          { id: "b2", type: "service", label: "async", col: 1, row: 1, annotation: { role: "", reasoning: null, alternative: null } },
+          { id: "a3", type: "service", label: "A", col: 0, row: 2, annotation: { role: "", reasoning: null, alternative: null } },
+          { id: "b3", type: "datastore", label: "write", col: 1, row: 2, annotation: { role: "", reasoning: null, alternative: null } },
+          { id: "a4", type: "service", label: "A", col: 0, row: 3, annotation: { role: "", reasoning: null, alternative: null } },
+          { id: "b4", type: "datastore", label: "read", col: 1, row: 3, annotation: { role: "", reasoning: null, alternative: null } },
+          { id: "a5", type: "service", label: "A", col: 0, row: 4, annotation: { role: "", reasoning: null, alternative: null } },
+          { id: "b5", type: "service", label: "auth", col: 1, row: 4, annotation: { role: "", reasoning: null, alternative: null } }
+        ],
+        edges: [
+          { id: "e1", from: "a1", to: "b1", type: "sync" },
+          { id: "e2", from: "a2", to: "b2", type: "async" },
+          { id: "e3", from: "a3", to: "b3", type: "data-write", label: "write" },
+          { id: "e4", from: "a4", to: "b4", type: "data-read", label: "read" },
+          { id: "e5", from: "a5", to: "b5", type: "auth" }
+        ]
+      };
+
+      // mount() expects a root with [data-diagram-canvas] etc; build a
+      // minimal wrapper for these documentation-only specimens.
+      function mountSpecimen(hostId, data) {
+        var host = document.getElementById(hostId);
+        var wrap = document.createElement("div");
+        wrap.setAttribute("data-diagram-canvas", "");
+        host.appendChild(wrap);
+        var panel = document.createElement("div");
+        panel.setAttribute("data-diagram-panel", "");
+        panel.className = "bp-annotation";
+        panel.hidden = true;
+        host.appendChild(panel);
+        window.BlueprintDiagram.mount(host, data);
+      }
+
+      mountSpecimen("node-taxonomy", nodeTaxonomy);
+      mountSpecimen("edge-taxonomy", edgeTaxonomy);
+
+      var demo = document.getElementById("motion-demo");
+      var replay = document.getElementById("motion-replay");
+      replay.addEventListener("click", function () {
+        demo.classList.remove("is-playing");
+        void demo.offsetWidth;
+        demo.classList.add("is-playing");
+      });
+    })();
+  </script>
+</body>
+</html>

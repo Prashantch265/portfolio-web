@@ -1,0 +1,407 @@
+/*
+  Console diagram system — PRD-frontend-console.md §5.
+  Terminal-pane nodes, piped edges, output-pane annotations.
+  Same schema/interaction model as Blueprint (§5.1), re-skinned.
+*/
+
+.diagram-frame {
+  border: var(--rule-hairline-w) solid var(--rule);
+  margin: var(--space-6) 0;
+  background: var(--bg-raised);
+}
+
+.diagram-frame__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.diagram-frame__caption {
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+  min-width: 0;
+}
+
+.diagram-text-toggle {
+  font-size: 0.75rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: none;
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  color: var(--ink);
+  transition: border-color var(--motion-fast);
+}
+
+.diagram-text-toggle:hover {
+  border-color: var(--signal-info);
+}
+
+.diagram-frame__body {
+  display: grid;
+  grid-template-columns: 1fr;
+  position: relative;
+}
+
+.diagram-canvas-wrap {
+  padding: var(--space-5);
+  overflow-x: auto;
+}
+
+.diagram-canvas-wrap > svg {
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  height: auto;
+  max-width: 760px;
+}
+
+.diagram-canvas-wrap.is-compact > svg {
+  max-width: 520px;
+}
+
+/* --- nodes: terminal panes --- */
+
+.bp-node {
+  cursor: pointer;
+  outline: none;
+}
+
+.bp-node rect,
+.bp-node .node-shape {
+  fill: var(--bg);
+  stroke: var(--rule);
+  stroke-width: 1.5;
+  transition: stroke var(--motion-fast), opacity var(--motion-fast);
+  vector-effect: non-scaling-stroke;
+}
+
+.bp-node text {
+  font-family: var(--face-mono);
+  font-size: 12px;
+  fill: var(--ink);
+}
+
+.bp-node--external rect {
+  stroke: var(--rule);
+}
+
+.bp-node--external text {
+  fill: var(--ink-muted);
+}
+
+.bp-node--client rect {
+  fill: var(--signal-fill);
+}
+
+.bp-node--client .node-cursor {
+  fill: var(--signal);
+}
+
+.bp-node--datastore .node-disk {
+  stroke: var(--ink-muted);
+  stroke-width: 1.3;
+  vector-effect: non-scaling-stroke;
+}
+
+.bp-node--queue rect {
+  stroke-dasharray: 4 3;
+}
+
+.bp-node:hover rect,
+.bp-node:hover .node-shape,
+.bp-node.is-active rect,
+.bp-node.is-active .node-shape {
+  stroke: var(--signal);
+  stroke-width: 1.5;
+}
+
+.bp-node.is-active rect,
+.bp-node.is-active .node-shape {
+  stroke-width: 2;
+}
+
+.bp-node.is-dimmed {
+  opacity: 0.55;
+}
+
+.bp-node:focus-visible rect,
+.bp-node:focus-visible .node-shape {
+  stroke: var(--signal-info);
+  stroke-width: 2;
+}
+
+.bp-node:focus-visible {
+  outline: none;
+}
+
+.bp-node-hit {
+  fill: transparent !important;
+}
+
+/* client-node signal-fill wash on active, echoes the annotation panel */
+.bp-node.is-active rect {
+  fill: var(--signal-fill);
+}
+
+.bp-node--client.is-active rect {
+  fill: var(--signal-fill);
+}
+
+/* --- edges: piped connections --- */
+
+.bp-edge {
+  fill: none;
+  stroke: var(--ink-muted);
+  stroke-width: 1.5;
+  transition: opacity var(--motion-fast);
+  vector-effect: non-scaling-stroke;
+}
+
+.bp-edge.is-dimmed {
+  opacity: 0.55;
+}
+
+.bp-edge--auth {
+  stroke-dasharray: 2 3;
+}
+
+.bp-edge-label {
+  font-family: var(--face-mono);
+  font-size: 10px;
+  fill: var(--ink-muted);
+}
+
+.bp-edge-lock {
+  fill: var(--ink-muted);
+}
+
+/* --- entrance motion, §6.1: typewriter node reveal + edge trace-in.
+   No continuous per-edge pulse in Console — that ambient claim lives
+   in the status strip instead (§6.2), one place, not scattered. --- */
+
+.bp-node {
+  opacity: 0;
+  transform: scale(0.98);
+  transform-origin: center;
+}
+
+.bp-edge-group {
+  /* opacity gates the whole group — line AND marker-end arrowhead
+     together. Hiding only the stroke via dashoffset (below) leaves
+     the arrowhead marker fully visible with no line or node reaching
+     it, since markers ignore their path's stroke-dasharray. */
+  opacity: 0;
+}
+
+svg.is-visible .bp-node {
+  animation: bp-node-in 160ms var(--ease-standard) forwards;
+  animation-delay: calc(var(--node-index, 0) * 150ms);
+}
+
+svg.is-visible .bp-edge-group {
+  opacity: 1;
+}
+
+svg.is-visible .bp-edge-group--fade {
+  animation: bp-edge-in var(--motion-fast) linear forwards;
+  animation-delay: calc(var(--node-index, 0) * 150ms + 160ms);
+}
+
+@keyframes bp-node-in {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bp-edge-in {
+  to {
+    opacity: 1;
+  }
+}
+
+/* the node's text is revealed character-by-character from JS
+   (textContent updated per tick) rather than via a CSS animation —
+   opacity here just ensures the pane/border appears with the node,
+   text starts empty and is filled in by the typewriter driver */
+
+@media (prefers-reduced-motion: reduce) {
+  .bp-node,
+  .bp-edge-group {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+}
+
+/* --- output pane (annotation) — appended log text, no card chrome
+   beyond the diagram frame's own border (a nested border here would
+   be the "fake terminal window" anti-pattern, PRD §2.4) --- */
+
+.bp-annotation {
+  padding: var(--space-4);
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  font-size: var(--text-small-size);
+}
+
+@media (min-width: 1024px) {
+  .diagram-frame--panel-side .diagram-frame__body {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+
+  .diagram-frame--panel-side .bp-annotation {
+    border-top: none;
+    border-left: var(--rule-hairline-w) solid var(--rule);
+    height: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .bp-annotation[data-diagram-panel] {
+    display: none;
+  }
+}
+
+.bp-annotation[hidden] {
+  display: none;
+}
+
+.bp-annotation__empty {
+  color: var(--ink-muted);
+}
+
+.bp-annotation__prompt {
+  color: var(--ink-muted);
+  margin-bottom: var(--space-3);
+}
+
+.bp-annotation__prompt::before {
+  content: "$ ";
+  color: var(--signal);
+}
+
+.bp-annotation__title {
+  font-weight: 600;
+  color: var(--signal-info);
+  margin-bottom: var(--space-3);
+}
+
+.bp-annotation__block + .bp-annotation__block {
+  margin-top: var(--space-4);
+}
+
+.bp-annotation__block-label {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--ink-muted);
+}
+
+.bp-annotation__block-label::before {
+  content: "# ";
+}
+
+.bp-annotation__block p {
+  color: var(--ink);
+}
+
+/* --- text equivalent --- */
+
+.diagram-text-equivalent {
+  padding: var(--space-4);
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  font-size: var(--text-small-size);
+}
+
+.diagram-text-equivalent[hidden] {
+  display: none;
+}
+
+.diagram-text-equivalent ol {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.diagram-text-equivalent li {
+  margin-bottom: var(--space-3);
+}
+
+.diagram-text-equivalent li strong {
+  color: var(--signal-info);
+}
+
+.diagram-text-equivalent__edges {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--rule-hairline-w) solid var(--rule);
+}
+
+/* --- linearized mobile renderer --- */
+
+.diagram-linear {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+}
+
+.diagram-linear__node {
+  border: var(--rule-hairline-w) solid var(--rule);
+  padding: var(--space-3) var(--space-4);
+}
+
+.diagram-linear__node-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  color: var(--ink);
+  font-family: var(--face-mono);
+}
+
+.diagram-linear__node-label {
+  font-size: var(--text-small-size);
+  font-weight: 600;
+  color: var(--signal-info);
+}
+
+.diagram-linear__node-type {
+  color: var(--ink-muted);
+}
+
+.diagram-linear__chevron {
+  transition: transform var(--motion-fast);
+  flex-shrink: 0;
+}
+
+.diagram-linear__node[data-open="true"] .diagram-linear__chevron {
+  transform: rotate(180deg);
+}
+
+.diagram-linear__annotation {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  display: none;
+}
+
+.diagram-linear__node[data-open="true"] .diagram-linear__annotation {
+  display: block;
+}
+
+.diagram-linear__connector {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  padding: var(--space-2) 0 var(--space-2) var(--space-4);
+}

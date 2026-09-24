@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%230A0C0F%27/%3E%3Crect x=%278%27 y=%2710%27 width=%276%27 height=%2712%27 fill=%27%233FB950%27/%3E%3Ctext x=%2717%27 y=%2722%27 font-family=%27monospace%27 font-weight=%27700%27 font-size=%2714%27 fill=%27%23C9D1D9%27%3EPC%3C/text%3E%3C/svg%3E" />
+  <title>404 — Prashant Chaudhary</title>
+  <link rel="stylesheet" href="assets/tokens.css?v=2" />
+  <link rel="stylesheet" href="assets/base.css?v=2" />
+  <link rel="stylesheet" href="assets/palette.css?v=2" />
+</head>
+<body>
+
+  <header class="site-header" data-site-header>
+    <div class="frame">
+      <div class="site-header__bar">
+        <a href="index.html" class="wordmark">prashant@chaudhary:~$</a>
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="work.html">work</a>
+          <a href="writing.html">writing</a>
+          <a href="stack.html">stack</a>
+          <a href="cv.html">cv</a>
+        </nav>
+        <div class="header-actions">
+          <button class="palette-hint" data-palette-hint type="button">search <kbd>⌘K</kbd></button>
+          <button class="theme-toggle" data-theme-toggle type="button">dark</button>
+          <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-controls="mobile-nav" type="button">menu</button>
+        </div>
+      </div>
+    </div>
+    <div class="mobile-nav" id="mobile-nav" data-mobile-nav>
+      <div class="frame">
+        <a href="work.html">work</a>
+        <a href="writing.html">writing</a>
+        <a href="stack.html">stack</a>
+        <a href="cv.html">cv</a>
+        <button class="mobile-nav__palette" data-mobile-palette-open type="button">search...</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="error-page">
+      <p class="error-page__prompt">prashant@chaudhary:~$ cd /work/foo</p>
+      <p class="error-page__message">bash: cd: /work/foo: No such file or directory</p>
+      <p style="color:var(--ink-muted);max-width:48ch;">This route isn't wired into the graph. It may have moved, or never existed.</p>
+      <a class="btn" href="index.html">cd ~</a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="frame">
+      <hr class="rule" />
+      <div class="site-footer__row" style="margin-top: var(--space-5);">
+        <p class="text-small">© <span data-year></span> prashant chaudhary. kathmandu, nepal.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/data-console.js?v=2"></script>
+  <script src="assets/app.js?v=2"></script>
+</body>
+</html>
