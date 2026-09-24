@@ -43,7 +43,7 @@
 
   /* §4.1 grid — same math as both siblings; never rendered as a
      visible device (that's the point of this direction) */
-  --grid-max: 1200px;
+  --grid-max: 1400px;
   --grid-margin: 64px;
   --grid-gutter: 24px;
   --grid-columns: 12;

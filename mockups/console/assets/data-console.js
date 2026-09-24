@@ -131,11 +131,11 @@ window.SITE_DATA = (function () {
       { id: "e1", from: "client", to: "gateway", type: "sync" },
       { id: "e2", from: "gateway", to: "auth-store", type: "auth" },
       { id: "e3", from: "gateway", to: "app-service", type: "sync" },
-      { id: "e4", from: "app-service", to: "folders-store", type: "data-write", label: ">>" },
-      { id: "e5", from: "app-service", to: "documents-store", type: "data-write", label: ">>" },
-      { id: "e6", from: "app-service", to: "rules-store", type: "data-write", label: ">>" },
+      { id: "e4", from: "app-service", to: "folders-store", type: "data-write", label: "write" },
+      { id: "e5", from: "app-service", to: "documents-store", type: "data-write", label: "write" },
+      { id: "e6", from: "app-service", to: "rules-store", type: "data-write", label: "write" },
       { id: "e7", from: "app-service", to: "legacy-bridge", type: "async" },
-      { id: "e8", from: "legacy-bridge", to: "auth-store", type: "data-read", label: "<<" },
+      { id: "e8", from: "legacy-bridge", to: "auth-store", type: "data-read", label: "read" },
       { id: "e9", from: "doc-intake", to: "app-service", type: "async" }
     ]
   };
@@ -223,7 +223,7 @@ window.SITE_DATA = (function () {
       { id: "e3", from: "gateway", to: "workflow", type: "async" },
       { id: "e4", from: "workflow", to: "authz", type: "auth" },
       { id: "e5", from: "workflow", to: "runtimes", type: "sync" },
-      { id: "e6", from: "runtimes", to: "retrieval", type: "data-read", label: "<<" }
+      { id: "e6", from: "runtimes", to: "retrieval", type: "data-read", label: "read" }
     ]
   };
 

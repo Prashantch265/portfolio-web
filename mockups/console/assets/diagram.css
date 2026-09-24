@@ -59,7 +59,7 @@
   margin: 0 auto;
   width: 100%;
   height: auto;
-  max-width: 760px;
+  max-width: 960px;
 }
 
 .diagram-canvas-wrap.is-compact > svg {
@@ -174,8 +174,8 @@
 
 .bp-edge-label {
   font-family: var(--face-mono);
-  font-size: 10px;
-  fill: var(--ink-muted);
+  font-size: 11px;
+  fill: var(--ink);
 }
 
 .bp-edge-lock {

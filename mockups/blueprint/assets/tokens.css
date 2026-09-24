@@ -53,7 +53,7 @@
   --on-signal: #ffffff;
 
   /* §4.1 grid */
-  --grid-max: 1200px;
+  --grid-max: 1400px;
   --grid-margin: 64px;
   --grid-gutter: 24px;
   --grid-columns: 12;

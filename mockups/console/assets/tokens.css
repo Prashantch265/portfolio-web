@@ -26,7 +26,7 @@
   --on-signal: #05170B;
 
   /* §4.1 grid — same math as Blueprint, different visible expression */
-  --grid-max: 1200px;
+  --grid-max: 1400px;
   --grid-margin: 64px;
   --grid-gutter: 24px;
   --grid-columns: 12;

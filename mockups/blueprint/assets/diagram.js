@@ -233,7 +233,15 @@ window.BlueprintDiagram = (function () {
 
     return {
       d: d,
-      mid: { x: midX, y: (startY + endY) / 2 },
+      // label sits on the vertical trunk (plenty of clearance there)
+      // but at the TARGET's own row, not the average of start/end —
+      // that's what spreads labels from a fanned-out source (one
+      // source, several vertically-stacked targets) apart by row
+      // instead of clustering them at a shared midpoint. Placing it on
+      // the horizontal run into the target instead would put it too
+      // close to the node — the column gap is narrow enough that the
+      // opaque node fill paints over most of the label text.
+      mid: { x: midX, y: endY },
       length: Math.abs(midX - startX) + Math.abs(endY - startY) + Math.abs(endX - midX)
     };
   }
