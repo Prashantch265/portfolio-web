@@ -2,4 +2,5 @@ packages:
   - "apps/*"
   - "packages/*"
 allowBuilds:
+  '@scarf/scarf': false # swagger-ui-dist's opt-out install-analytics pinger — no functional need, block the network call
   esbuild: true

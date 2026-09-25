@@ -4,6 +4,7 @@ import { Logger } from "@nestjs/common";
 import { AppModule } from "./app.module.js";
 import { AllExceptionsFilter } from "./common/filters/http-exception.filter.js";
 import { requestIdMiddleware } from "./common/middleware/request-id.middleware.js";
+import { setupSwagger } from "./swagger.js";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -25,6 +26,8 @@ async function bootstrap() {
   });
 
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  setupSwagger(app);
 
   const port = process.env.PORT ? Number(process.env.PORT) : 3001;
   await app.listen(port);
