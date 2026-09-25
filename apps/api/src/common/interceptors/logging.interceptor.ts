@@ -6,7 +6,6 @@ import {
   type NestInterceptor,
 } from "@nestjs/common";
 import type { Request, Response } from "express";
-import { randomUUID } from "node:crypto";
 import { tap } from "rxjs";
 
 /**
@@ -15,6 +14,11 @@ import { tap } from "rxjs";
  * the already-in-flight request — never the body, never the raw request
  * object, never an IP — so there is no code path here that *could* log
  * PII, rather than a policy that merely says not to.
+ *
+ * requestId comes from requestIdMiddleware, which runs before this and
+ * guarantees the header is set — AllExceptionsFilter reads the same
+ * header, so a request's success-path log and its error correlationId
+ * are always the same id.
  */
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -24,7 +28,7 @@ export class LoggingInterceptor implements NestInterceptor {
     const req = context.switchToHttp().getRequest<Request>();
     const res = context.switchToHttp().getResponse<Response>();
 
-    const requestId = (req.headers["x-request-id"] as string | undefined) ?? randomUUID();
+    const requestId = req.headers["x-request-id"] as string;
     const start = performance.now();
     const { method, path } = req;
 
