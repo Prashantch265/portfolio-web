@@ -1,13 +1,14 @@
 # Portfolio — PRDs
 
-One backend PRD, three alternate frontend directions, evaluated side-by-side before any of them is committed to:
+One backend PRD, four alternate frontend directions, evaluated side-by-side before any of them is committed to:
 
 - **`PRD-frontend-blueprint.md`** — **currently the chosen direction.** "Blueprint": swiss grid, hairline rules, architecture diagrams as hero content, diagram-scoped motion (node draw-in, edge trace-in, ambient flow-pulse). Built out as a working mockup at `../mockups/blueprint/`.
 - **`PRD-frontend-console.md`** — alternate. "Console": dark-first terminal aesthetic, Cmd-K command-palette navigation, a live status strip as the signature ambient element. Built out as a working mockup at `../mockups/console/`. Strongest signal to peer engineers; mono-only body text trades some reading comfort for the terminal-native feel (see the tradeoff note below).
 - **`PRD-frontend-ledger.md`** — alternate. "Ledger": editorial technical — serif display, proportional sans body, mono scoped strictly to metadata. No signature structural device (no visible grid, no command palette); the bet is that restraint itself, applied consistently, reads as more serious than either sibling. Optimized specifically for reading comfort on long-form case studies and writing. Built out as a working mockup at `../mockups/ledger/`.
+- **`PRD-frontend-schematic.md`** — alternate, newest. "Schematic": Blueprint's chassis (light-default, proportional-sans body, hairline grid) with Console's command palette and live status strip grafted on as non-typographic overlays. Written specifically to test whether Console's "tech guy" signal and Blueprint's reading comfort can coexist, after real friend feedback split cleanly between the two live mockups. Built out as a working mockup at `../mockups/schematic/`.
 - **`PRD-backend.md`** — direction-agnostic. NestJS + Postgres + Redis on a self-hosted VPS (Docker Compose + Traefik), data model, public and admin API surface, the gated-CV flow, contact pipeline, first-party analytics, security, and deploy/backup procedure. RAG chat over the profile is spec'd as phase 2, not built in v1.
 
-All three frontend PRDs share the same section numbering (1–12) so they read side-by-side. Product-truth sections — audiences, positioning, confidentiality, privacy, backend contracts, scope — are identical in substance across all three; only brand identity, design language, diagram skin, motion, components, and page treatment differ.
+All four frontend PRDs share the same section numbering (1–12) so they read side-by-side. Product-truth sections — audiences, positioning, confidentiality, privacy, backend contracts, scope — are identical in substance across all four; only brand identity, design language, diagram skin, motion, components, and page treatment differ.
 
 ## Reading-comfort tradeoff (recorded 2026-09-24)
 
@@ -24,7 +25,7 @@ Comparing the built Blueprint and Console mockups side-by-side: Console's mono-e
 
 ## Open items (not blockers, tracked across the PRDs)
 
-- Which of the three frontend directions ships — all three are now built and comparable.
+- Which frontend direction ships — all four are now built and comparable. Schematic is a synthesis attempt, not a foregone conclusion — written and built after friends shown the live Blueprint/Console mockups split on "tech guy" (Console) vs. "easy to read" (Blueprint). It ships only if shown to the same split friend group actually converges their opinion without losing the Blueprint-preferrers; otherwise the answer stays Blueprint.
 - Domain name
 - VPS provider and sizing
 - Email provider

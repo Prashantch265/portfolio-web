@@ -3,7 +3,7 @@
 **Owner:** Prashant Chaudhary
 **Status:** Draft v1 — currently-chosen direction
 **Companion document:** `PRD-backend.md` (data contracts and API surface referenced throughout)
-**Sibling document:** `PRD-frontend-console.md` — an alternate direction ("Console") kept for side-by-side comparison, not adopted.
+**Sibling documents:** `PRD-frontend-console.md` ("Console," dark-first terminal alternate), `PRD-frontend-ledger.md` ("Ledger," editorial-technical alternate), `PRD-frontend-schematic.md` ("Schematic," Blueprint's chassis plus Console's palette/status-strip overlays) — kept for side-by-side comparison, none adopted.
 **Brand direction:** "Blueprint" — swiss grid, hairline rules, architecture diagrams as hero content
 
 ---

@@ -1,0 +1,153 @@
+/*
+  Command palette — PRD-frontend-schematic.md §7, §8.2. Adapted from
+  Console's palette.css. A SECONDARY nav surface here, never the only
+  one — the header/footer nav stay visible and fully functional with
+  this entirely absent (JS-disabled, or simply undiscovered). Bottom
+  sheet on mobile, centered modal on desktop.
+*/
+
+.palette-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+.palette-overlay[hidden] {
+  display: none;
+}
+
+.palette {
+  width: min(560px, calc(100vw - 48px));
+  max-height: 60vh;
+  background: var(--bg-raised);
+  border: var(--rule-hairline-w) solid var(--rule-emphasis);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: scale(0.98);
+  animation: palette-in var(--motion-palette) var(--ease-standard) forwards;
+}
+
+@keyframes palette-in {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .palette {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+}
+
+.palette__input {
+  font-family: var(--face-mono);
+  font-size: 0.9375rem;
+  padding: var(--space-4);
+  border: none;
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+  background: transparent;
+  color: var(--ink);
+  outline: none;
+}
+
+.palette__input::placeholder {
+  color: var(--ink-muted);
+}
+
+.palette__results {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2) 0;
+  overflow-y: auto;
+}
+
+.palette__result {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  font-size: var(--text-small-size);
+}
+
+.palette__result.is-active {
+  background: var(--signal-fill);
+}
+
+.palette__result-kind {
+  color: var(--ink-muted);
+  font-family: var(--face-mono);
+  font-size: 0.6875rem;
+  min-width: 4.5em;
+}
+
+.palette__result.is-active .palette__result-label {
+  color: var(--signal);
+}
+
+.palette__empty {
+  padding: var(--space-4);
+  color: var(--ink-muted);
+  font-size: var(--text-small-size);
+}
+
+/* header trigger hint — the discoverability affordance, §7 */
+.palette-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+  background: none;
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  transition: border-color var(--motion-fast), color var(--motion-fast);
+}
+
+.palette-hint:hover,
+.palette-hint:focus-visible {
+  border-color: var(--signal);
+  color: var(--ink);
+}
+
+.palette-hint kbd {
+  font-family: var(--face-mono);
+  font-size: 0.75rem;
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: 1px 5px;
+  background: var(--bg-raised);
+}
+
+/* bottom sheet below 768px — a small centered palette is hard to
+   reach one-handed on mobile */
+@media (max-width: 767px) {
+  .palette-overlay {
+    align-items: flex-end;
+    padding-top: 0;
+  }
+
+  .palette {
+    width: 100%;
+    max-height: 80vh;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .palette-hint {
+    display: none;
+  }
+}
