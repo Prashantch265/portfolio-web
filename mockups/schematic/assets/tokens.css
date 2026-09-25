@@ -1,0 +1,171 @@
+/*
+  Blueprint design tokens — PRD-frontend.md §4.
+  One token file. No raw hex/px outside this file (base.css / diagram.css
+  reference these custom properties only, per PRD §4.7).
+*/
+
+@font-face {
+  font-family: "Inter Tight";
+  src: url("fonts/inter-tight-variable.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("fonts/ibm-plex-mono-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("fonts/ibm-plex-mono-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("fonts/ibm-plex-mono-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* §4.4 color tokens — light (default, design-of-record) */
+  --bg: #ffffff;
+  --bg-raised: #fafafa;
+  --ink: #111111;
+  --ink-muted: #5c5c5c;
+  --rule: #d4d4d4;
+  --rule-emphasis: #1b5e9e;
+  --signal: #1b5e9e;
+  --signal-fill: #eaf2fa;
+  --danger: #b3261e;
+  --success: #2e7d4f;
+
+  /* white text on --signal, used for filled buttons */
+  --on-signal: #ffffff;
+
+  /* §4.1 grid */
+  --grid-max: 1400px;
+  --grid-margin: 64px;
+  --grid-gutter: 24px;
+  --grid-columns: 12;
+
+  /* §4.2 hairline system — two weights only */
+  --rule-hairline-w: 1px;
+  --rule-emphasis-w: 1.5px;
+
+  /* §4.5 spacing scale — 4px base */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 48px;
+  --space-7: 64px;
+  --space-8: 96px;
+
+  /* §4.3 type — faces (Neue Haas Grotesk is licensed; Inter Tight stands
+     in as the documented freely-licensed interim/fallback face) */
+  --face-display: "Inter Tight", -apple-system, "Segoe UI", sans-serif;
+  --face-body: "Inter Tight", -apple-system, "Segoe UI", sans-serif;
+  --face-mono: "IBM Plex Mono", "SF Mono", "Menlo", monospace;
+
+  /* §4.3 type scale — desktop */
+  --text-display-size: 4.5rem;
+  --text-display-lh: 1.05;
+  --text-display-tracking: -0.01em;
+
+  --text-h2-size: 2.5rem;
+  --text-h2-lh: 1.1;
+  --text-h2-tracking: -0.01em;
+
+  --text-h3-size: 1.5rem;
+  --text-h3-lh: 1.2;
+  --text-h3-tracking: 0;
+
+  --text-body-lg-size: 1.25rem;
+  --text-body-lg-lh: 1.5;
+
+  --text-body-size: 1rem;
+  --text-body-lh: 1.6;
+
+  --text-small-size: 0.875rem;
+  --text-small-lh: 1.5;
+
+  --text-label-size: 0.75rem;
+  --text-label-lh: 1.4;
+  --text-label-tracking: 0.08em;
+
+  --text-mono-size: 0.875rem;
+  --text-mono-lh: 1.5;
+
+  /* §6 motion */
+  --motion-fast: 120ms;
+  --motion-node: 200ms;
+  --motion-node-stagger: 40ms;
+  --motion-rule: 300ms;
+  /* §6.4 — the palette open/close is the one permitted transform
+     transition on the site, ported from Console §6.3's OS-convention
+     justification (Spotlight/Alfred/Cmd-P) */
+  --motion-palette: 150ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* dark mode — independently tuned per §4.4, not an inversion filter */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e0e0e;
+    --bg-raised: #141414;
+    --ink: #ededed;
+    --ink-muted: #a3a3a3;
+    --rule: #262626;
+    --rule-emphasis: #4a8fc7;
+    --signal: #4a8fc7;
+    --signal-fill: #14243a;
+    --danger: #e4675f;
+    --success: #4fbf80;
+    --on-signal: #0e0e0e;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0e0e0e;
+  --bg-raised: #141414;
+  --ink: #ededed;
+  --ink-muted: #a3a3a3;
+  --rule: #262626;
+  --rule-emphasis: #4a8fc7;
+  --signal: #4a8fc7;
+  --signal-fill: #14243a;
+  --danger: #e4675f;
+  --success: #4fbf80;
+  --on-signal: #0e0e0e;
+}
+
+/* mobile type scale — §4.3 */
+@media (max-width: 767px) {
+  :root {
+    --text-display-size: 2.5rem;
+    --text-h2-size: 1.75rem;
+    --text-h3-size: 1.25rem;
+    --text-body-lg-size: 1.125rem;
+    --text-mono-size: 0.8125rem;
+    --grid-margin: 20px;
+    --grid-gutter: 16px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  :root {
+    --grid-margin: 32px;
+    --grid-gutter: 20px;
+  }
+}
