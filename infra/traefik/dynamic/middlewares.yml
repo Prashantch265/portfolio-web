@@ -1,0 +1,20 @@
+# Backend PRD §13 security headers, dev variant. The prod overlay adds
+# HSTS via a separate middleware — never applied here, since an HSTS
+# header on `localhost` poisons the browser for every other local
+# project on that host.
+
+http:
+  middlewares:
+    security-headers:
+      headers:
+        contentTypeNosniff: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        # Restrictive baseline. The final policy can't be finalized until
+        # the frontend direction picks its font/asset origins (frontend
+        # PRD §4.7) — report-only in dev so it never blocks M0 work.
+        # The prod overlay switches this to the enforcing
+        # contentSecurityPolicy field once a direction is locked.
+        contentSecurityPolicyReportOnly: "default-src 'self'"
+
+    compression:
+      compress: {}

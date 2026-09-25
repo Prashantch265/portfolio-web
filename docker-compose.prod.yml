@@ -1,0 +1,83 @@
+# Prod overlay (backend PRD §2, §13): `docker compose -f docker-compose.yml
+# -f docker-compose.prod.yml up -d`. Drops every host-published port on
+# postgres/redis/the Traefik dashboard, adds TLS + HSTS + restart policy.
+#
+# Routing switches from dev's static file provider to Docker-label
+# discovery here — this is where that tradeoff flips: a real VPS runs
+# more than two static services over time, and labels keep the routing
+# declaration next to the service it routes to. The Docker socket is
+# mounted read-only and only in this overlay, never in dev.
+#
+# Domain/DNS/TLS-challenge-method are open items (§16) — SITE_DOMAIN and
+# ACME_EMAIL are read from .env and must be set before this overlay is used.
+
+name: portfolio
+
+services:
+  traefik:
+    command:
+      - --configFile=/etc/traefik/traefik.yml
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/acme/acme.json
+      # HTTP-01 default; switch to DNS-01 once the DNS provider is chosen
+      # (§16) by replacing this line with --certificatesresolvers.le.acme.dnschallenge=true
+      # and the provider-specific env vars.
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+      - --api.dashboard=false
+    # !override on both keys below: verified with `docker compose config`
+    # that a plain list here MERGES with the base file's list rather than
+    # replacing it — without !override, the base's 8080 dashboard port
+    # leaks into prod, and worse, the base's whole-directory dynamic mount
+    # stays present alongside these individual-file mounts, which would
+    # shadow routes.dev.yml into prod right alongside the label-discovered
+    # routes it's supposed to replace.
+    ports: !override
+      - "80:80"
+      - "443:443"
+      # dashboard port intentionally not published in prod
+    volumes: !override
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./infra/traefik/dynamic/middlewares.yml:/etc/traefik/dynamic/middlewares.yml:ro
+      - ./infra/traefik/dynamic/middlewares.prod.yml:/etc/traefik/dynamic/middlewares.prod.yml:ro
+      - acme:/acme
+    restart: unless-stopped
+
+  web:
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.web.rule=Host(`${SITE_DOMAIN}`) && PathPrefix(`/`)
+      - traefik.http.routers.web.priority=1
+      - traefik.http.routers.web.entrypoints=websecure
+      - traefik.http.routers.web.tls.certresolver=le
+      - traefik.http.routers.web.middlewares=security-headers-prod,hsts,compression
+      - traefik.http.services.web.loadbalancer.server.port=3000
+
+  api:
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.api.rule=Host(`${SITE_DOMAIN}`) && PathPrefix(`/api`)
+      - traefik.http.routers.api.priority=10
+      - traefik.http.routers.api.entrypoints=websecure
+      - traefik.http.routers.api.tls.certresolver=le
+      - traefik.http.routers.api.middlewares=security-headers-prod,hsts,compression
+      - traefik.http.services.api.loadbalancer.server.port=3001
+
+  postgres:
+    restart: unless-stopped
+    ports: !override [] # plain `[]` does NOT clear the base list in this Compose version — verified; !override forces it
+
+  redis:
+    restart: unless-stopped
+    ports: !override []
+
+volumes:
+  acme:

@@ -1,0 +1,33 @@
+# Dev-only static routing (docker-compose.yml). Explicit instead of
+# Docker-label discovery — see that file's header comment for why: a
+# two-service dev stack whose routes never change doesn't need Traefik
+# holding the Docker socket. Upstreams are the Compose service DNS names.
+
+http:
+  routers:
+    web:
+      rule: "PathPrefix(`/`)"
+      priority: 1
+      service: web
+      middlewares:
+        - security-headers
+        - compression
+
+    api:
+      rule: "PathPrefix(`/api`)"
+      priority: 10
+      service: api
+      middlewares:
+        - security-headers
+        - compression
+
+  services:
+    web:
+      loadBalancer:
+        servers:
+          - url: "http://web:3000"
+
+    api:
+      loadBalancer:
+        servers:
+          - url: "http://api:3001"

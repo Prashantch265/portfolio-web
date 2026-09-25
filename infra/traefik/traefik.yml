@@ -1,0 +1,30 @@
+# Static Traefik config (backend PRD §2). Dev defaults live here;
+# docker-compose.prod.yml overrides entrypoints/certificatesResolvers
+# for TLS via CLI flags/labels, since the domain and DNS provider are
+# still open items (§16 — final challenge type depends on DNS choice).
+#
+# No `providers.docker` here deliberately: dev routes statically via the
+# file provider (infra/traefik/dynamic/routes.dev.yml) so Traefik never
+# needs the Docker socket mounted locally. The prod overlay enables the
+# docker provider via its own command flags instead, where label-based
+# discovery earns its keep (see docker-compose.prod.yml).
+
+api:
+  dashboard: true
+  insecure: true # dev only — never enabled in the prod overlay
+
+entryPoints:
+  web:
+    address: ":80"
+
+providers:
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+log:
+  level: INFO
+  format: json
+
+accessLog:
+  format: json

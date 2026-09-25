@@ -320,6 +320,7 @@ Realistic targets for a single-owner, low-traffic personal site — not enterpri
 | `MAIL_API_KEY` | yes | — | Provider-specific credential |
 | `MAIL_FROM_ADDRESS` | yes | — | Depends on final domain choice (open item below) |
 | `SITE_ORIGIN` | yes | — | Used for CORS allowlist and OG/absolute-URL generation |
+| `ANALYTICS_SALT` | yes | — | Salts the daily-rotating `sessionHash` (§10); added during M0 scaffolding — §10 required a salt but this table originally didn't declare where it lives |
 | `CV_GRANT_TTL_DAYS` | no | `7` | §7 |
 | `CONTACT_RATE_LIMIT_PER_IP_HOUR` | no | `5` | §9 |
 | `CONTACT_RATE_LIMIT_PER_EMAIL_DAY` | no | `3` | §9 |

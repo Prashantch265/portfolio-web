@@ -1,0 +1,9 @@
+**/node_modules
+**/.turbo
+**/.next
+**/dist
+.git
+docs/.private
+mockups/*/.review
+mockups/*/.impeccable
+council-shots

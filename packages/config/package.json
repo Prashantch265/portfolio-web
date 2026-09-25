@@ -1,0 +1,23 @@
+{
+  "name": "@portfolio/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "base.json",
+    "nest.json",
+    "next.json",
+    "eslint.js"
+  ],
+  "exports": {
+    "./tsconfig/base": "./base.json",
+    "./tsconfig/nest": "./nest.json",
+    "./tsconfig/next": "./next.json",
+    "./eslint": "./eslint.js"
+  },
+  "dependencies": {
+    "@eslint/js": "^9.17.0",
+    "eslint": "^9.17.0",
+    "typescript-eslint": "^8.18.0"
+  }
+}
