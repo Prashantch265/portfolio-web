@@ -6,6 +6,7 @@ import { DrizzleModule } from "./db/drizzle.module.js";
 import { RedisModule } from "./redis/redis.module.js";
 import { HealthModule } from "./health/health.module.js";
 import { LoggingInterceptor } from "./common/interceptors/logging.interceptor.js";
+import { ResponseInterceptor } from "./common/interceptors/response.interceptor.js";
 import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe.js";
 
 @Module({
@@ -22,6 +23,14 @@ import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe.js";
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
+    },
+    // Wraps every business-endpoint response in {success,message,data}
+    // (backend PRD-adjacent API-contract convention). Health/readiness
+    // opt out via @SkipEnvelope() — their body is an infra contract, not
+    // a business response.
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
     },
     // No schema at the global level — a no-op pass-through until M1
     // registers per-route instances via @UsePipes(new ZodValidationPipe(dto)).

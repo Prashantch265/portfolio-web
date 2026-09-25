@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable, Optional, type PipeTransform } from "@nestjs/common";
+import { Injectable, Optional, type PipeTransform } from "@nestjs/common";
 import type { ZodSchema } from "zod";
+import { ValidationException } from "../exceptions/exceptions.js";
 
 /**
  * Registered globally in AppModule (backend PRD §3) so no handler body
@@ -22,13 +23,15 @@ export class ZodValidationPipe implements PipeTransform {
     if (!this.schema) return value;
     const result = this.schema.safeParse(value);
     if (!result.success) {
-      throw new BadRequestException({
-        message: "Validation failed",
-        errors: result.error.issues.map((issue) => ({
-          path: issue.path.join("."),
-          message: issue.message,
-        })),
-      });
+      // {field: [messages]} shape — AllExceptionsFilter reads this off
+      // ValidationException.source and returns it as the error body's
+      // `source` field, per the unified exception hierarchy.
+      const source: Record<string, string[]> = {};
+      for (const issue of result.error.issues) {
+        const path = issue.path.join(".") || "_root";
+        (source[path] ??= []).push(issue.message);
+      }
+      throw new ValidationException("Validation failed", source);
     }
     return result.data;
   }

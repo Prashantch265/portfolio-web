@@ -3,9 +3,14 @@ import { NestFactory } from "@nestjs/core";
 import { Logger } from "@nestjs/common";
 import { AppModule } from "./app.module.js";
 import { AllExceptionsFilter } from "./common/filters/http-exception.filter.js";
+import { requestIdMiddleware } from "./common/middleware/request-id.middleware.js";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
+
+  // Before anything else in the pipeline: LoggingInterceptor and
+  // AllExceptionsFilter both read this same id off the request.
+  app.use(requestIdMiddleware);
 
   // Every public route lives under /api/* on the same origin as the web
   // app (backend PRD §2) so the browser never needs CORS for the common case.

@@ -1,8 +1,15 @@
 import { Controller, Get, HttpCode, HttpStatus, Res } from "@nestjs/common";
 import type { Response } from "express";
 import { healthResponseSchema, type HealthResponse } from "@portfolio/types";
+import { SkipEnvelope } from "../common/decorators/skip-envelope.decorator.js";
 import { HealthService } from "./health.service.js";
 
+/**
+ * @SkipEnvelope() at the class level: both routes here are an infra
+ * contract (Traefik healthchecks, packages/types' Zod schemas), not a
+ * business API response — ResponseInterceptor must never touch their body.
+ */
+@SkipEnvelope()
 @Controller()
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
