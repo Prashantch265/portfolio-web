@@ -374,16 +374,16 @@ For each component: purpose, anatomy, states, responsive behavior. (Detailed vis
 
 **Hard rule: no current or former employer name, no internal product name, no client name, and no internal system architecture appears anywhere on the public site.** This applies to case study prose, diagram node labels, diagram annotations, the CV page, and `/credentials`.
 
-Generalization examples (before → after):
+Generalization examples (before → after). The specific identifiers this table maps from are held privately in `docs/.private/confidentiality-map.md` (gitignored, never committed) — only the generalized column is safe to publish, so only it appears here:
 
-| Specific (not to publish) | Generalized (publish this) |
+| Category | Generalized (publish this) |
 |---|---|
-| "Fusemachines" / "IAP" / "Intelligent Automation Platform" | "a multi-tenant enterprise platform for building and deploying LLM agents" |
-| "Google ADK", "LangGraph" named as *the employer's* specific integration | Framework names themselves are public/open-source and may be named generically ("built on two open-source agent orchestration frameworks") — the rule is about *whose product* this was and *what it's called internally*, not about hiding public technology names |
-| "LenderIQ" | "a commercial real-estate document and loan-verification platform" |
-| "AI Studio for Real Estate" | omit entirely — internal org naming, not needed for the story |
+| Employer / internal platform name | "a multi-tenant enterprise platform for building and deploying LLM agents" |
+| Open-source frameworks used | Framework names themselves are public and may be named generically ("built on two open-source agent orchestration frameworks") — the rule is about *whose product* this was and *what it's called internally*, not about hiding public technology names |
+| Client product name (real estate finance) | "a commercial real-estate document and loan-verification platform" |
+| Internal org-naming for a sibling product | omit entirely — internal naming, not needed for the story |
 | Real diagram showing actual service names, actual table names, actual internal endpoints | Diagram redrawn with generic node labels ("Gateway Service", "Workflow Orchestrator", "Document Store") that preserve the real architecture's shape and the real reasoning, without exposing real identifiers |
-| "Prashant Tiwari" (manager quoted in LOR) | Any quote used must be stripped of names and attributed only as "a product lead I worked with," and only with content Prashant is comfortable is non-identifying — default to no direct quotes in v1 |
+| Named individual quoted in a reference | Any quote used must be stripped of names and attributed only as "a product lead I worked with," and only with content Prashant is comfortable is non-identifying — default to no direct quotes in v1 |
 
 The engineering reasoning, the numbers, the contested-decision narrative, and the outcome all stay fully detailed — only identity is generalized. This is what keeps the case studies substantive rather than vague.
 

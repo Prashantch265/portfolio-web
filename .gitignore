@@ -3,4 +3,19 @@
 .impeccable/
 council-shots/
 node_modules/
-.env
+
+# secrets
+.env*
+!.env.example
+acme.json
+docs/.private/
+
+# database dumps — must never land in-tree (backend PRD §15)
+*.dump
+*.sql.gz
+
+# build output
+.turbo/
+.next/
+dist/
+*.tsbuildinfo

@@ -1,0 +1,19 @@
+# Prod-only additions layered on top of middlewares.yml. Mounted only by
+# docker-compose.prod.yml (backend PRD §13) — HSTS must never reach a
+# dev/localhost Traefik instance.
+
+http:
+  middlewares:
+    hsts:
+      headers:
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+
+    security-headers-prod:
+      headers:
+        contentTypeNosniff: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        # TODO: switch to the enforcing field once the frontend direction
+        # is locked and its font/asset origins are known (frontend PRD §4.7).
+        contentSecurityPolicyReportOnly: "default-src 'self'"

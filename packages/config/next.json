@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+    "incremental": true,
+    "noEmit": true,
+    // Next's own generated types (.next/types/**) and config files live
+    // outside src/ — unlike the nest/base presets, this app isn't scoped
+    // to a single rootDir.
+    "rootDir": "${configDir}",
+    "plugins": [{ "name": "next" }]
+  }
+}

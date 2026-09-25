@@ -1,0 +1,103 @@
+# Dev topology (backend PRD §2). Traefik is the only service with
+# published host ports; postgres/redis publish theirs too, but only in
+# this file — the prod overlay (docker-compose.prod.yml) drops them.
+#
+# Dev routing is static file-provider config (infra/traefik/dynamic/routes.dev.yml),
+# not Docker-label discovery — deliberately: label discovery needs the
+# Docker socket mounted into Traefik (root-equivalent host access), which
+# buys nothing in a two-service dev stack where the routes never change.
+# The prod overlay switches to label-based discovery instead, where it
+# earns its keep (§13 — see that file's own note on the tradeoff).
+name: portfolio
+
+services:
+  traefik:
+    image: traefik:v3.5
+    command:
+      - --configFile=/etc/traefik/traefik.yml
+    ports:
+      - "80:80"
+      - "8080:8080" # dashboard — dev only
+    volumes:
+      - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./infra/traefik/dynamic:/etc/traefik/dynamic:ro
+    depends_on:
+      - web
+      - api
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    env_file: .env
+    environment:
+      INTERNAL_API_URL: http://api:3001
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      api:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: .env
+    environment:
+      # .env's defaults point at localhost — correct for running the api
+      # natively on the host against `docker compose up postgres redis`,
+      # but wrong once the api itself is also a container: "localhost"
+      # there means the api container, not its siblings. Override with
+      # the Compose service DNS names for the containerized case.
+      DATABASE_URL: postgresql://portfolio:portfolio@postgres:5432/portfolio
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - media:/app/media # §2: local-volume media store, served through a controlled api route
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: portfolio
+      POSTGRES_DB: portfolio
+    ports:
+      - "5432:5432" # dev only — dropped in the prod overlay
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio -d portfolio"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379" # dev only — dropped in the prod overlay
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+  redisdata:
+  media: # §2 local-volume media store — mounted now, unused until M1/M2
