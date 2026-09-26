@@ -21,7 +21,7 @@ window.BlueprintDiagram = (function () {
 
   var NODE_W = 156;
   var NODE_H = 54;
-  var COL_W = 210;
+  var COL_W = 242;
   var ROW_H = 100;
   var MARGIN = 40;
 
