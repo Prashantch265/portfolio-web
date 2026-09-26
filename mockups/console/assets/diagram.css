@@ -252,14 +252,31 @@ svg.is-visible .bp-edge-group--fade {
 }
 
 @media (min-width: 1024px) {
+  /* the panel's content length varies per node (a short role sentence
+     vs. a role + reasoning + rejected-alternative paragraph) — as a
+     grid column it stretched the shared row to its own height, which
+     pushed everything below the diagram down and up as you hovered
+     between nodes. Taking it out of grid flow (absolute, pinned to
+     the frame's own height, internal scroll) means the row's height
+     is set by the canvas alone and never moves under hover. */
   .diagram-frame--panel-side .diagram-frame__body {
-    grid-template-columns: minmax(0, 1fr) 300px;
+    display: block;
+    position: relative;
+  }
+
+  .diagram-frame--panel-side .diagram-canvas-wrap {
+    padding-right: calc(300px + var(--space-5));
   }
 
   .diagram-frame--panel-side .bp-annotation {
     border-top: none;
     border-left: var(--rule-hairline-w) solid var(--rule);
-    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 300px;
+    overflow-y: auto;
   }
 }
 
