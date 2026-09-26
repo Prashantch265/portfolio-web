@@ -7,12 +7,14 @@
     "base.json",
     "nest.json",
     "next.json",
+    "react.json",
     "eslint.js"
   ],
   "exports": {
     "./tsconfig/base": "./base.json",
     "./tsconfig/nest": "./nest.json",
     "./tsconfig/next": "./next.json",
+    "./tsconfig/react": "./react.json",
     "./eslint": "./eslint.js"
   },
   "dependencies": {

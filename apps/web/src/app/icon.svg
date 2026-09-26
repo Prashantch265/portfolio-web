@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#0A0C0F"/>
+  <rect x="8" y="10" width="6" height="12" fill="#3FB950"/>
+  <text x="17" y="22" font-family="monospace" font-weight="700" font-size="14" fill="#C9D1D9">PC</text>
+</svg>

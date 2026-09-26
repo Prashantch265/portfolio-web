@@ -1,0 +1,1140 @@
+/*
+  Schematic base system — ported from mockups/schematic/assets/base.css
+  (PRD-frontend-schematic.md §4, §6, §7).
+  Grid, hairlines, type application, and the shared component inventory.
+  Tokens only — every color/space/type value below reads from tokens.css.
+*/
+
+/* ---------------------------------------------------------------------
+   Reset + foundations
+--------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--face-body);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-lh);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+/* browser surfaces carry the design too — craft-floor: theme what you
+   did not draw */
+::selection {
+  background: var(--signal);
+  color: var(--on-signal);
+}
+
+* {
+  scrollbar-color: var(--rule) var(--bg);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border: 2px solid var(--bg);
+  border-radius: 0;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: var(--rule-emphasis-w) solid var(--signal);
+  outline-offset: 3px;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+::placeholder {
+  color: var(--ink-muted);
+  opacity: 1;
+}
+
+/* numerals in tabular/metadata contexts read as measured data */
+.mono,
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------
+   Typography — §4.3
+--------------------------------------------------------------------- */
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--face-display);
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.text-display {
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-lh);
+  letter-spacing: var(--text-display-tracking);
+  font-weight: 600;
+}
+
+.text-h2 {
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-lh);
+  letter-spacing: var(--text-h2-tracking);
+}
+
+.text-h3 {
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-lh);
+}
+
+p {
+  margin: 0;
+  max-width: 68ch;
+}
+
+.text-body-lg {
+  font-size: var(--text-body-lg-size);
+  line-height: var(--text-body-lg-lh);
+}
+
+.text-small {
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-lh);
+  color: var(--ink-muted);
+}
+
+.label {
+  font-family: var(--face-mono);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-lh);
+  letter-spacing: var(--text-label-tracking);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.mono-meta {
+  font-family: var(--face-mono);
+  font-size: var(--text-mono-size);
+  line-height: var(--text-mono-lh);
+}
+
+.wordmark {
+  font-family: var(--face-display);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-size: 1rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------
+   Grid — §4.1. The grid is visible: hairline column guides at 40%
+   opacity (the mockup's own comment said "4%" — stale relative to the
+   actual `opacity: 0.4` below; corrected here), decorative, aria-hidden,
+   ≥1024px only.
+--------------------------------------------------------------------- */
+
+.frame {
+  max-width: var(--grid-max);
+  margin: 0 auto;
+  padding: 0 var(--grid-margin);
+  position: relative;
+}
+
+.frame--wide {
+  max-width: 1440px;
+}
+
+.grid-guides {
+  position: absolute;
+  inset: 0;
+  display: none;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@media (min-width: 1024px) {
+  .grid-guides {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-columns), 1fr);
+    gap: 0 var(--grid-gutter);
+    padding: 0 var(--grid-margin);
+    /* drift: the drafting-layer guides move a touch slower than the
+       content scrolling past them — set from app.js on scroll, one
+       shared custom property so every .grid-guides instance on the
+       page drifts in lockstep */
+    transform: translateY(var(--scroll-parallax, 0px));
+    will-change: transform;
+  }
+
+  .grid-guides span {
+    border-left: var(--rule-hairline-w) solid var(--rule);
+    opacity: 0.4;
+    height: 100%;
+  }
+
+  .grid-guides span:last-child {
+    border-right: var(--rule-hairline-w) solid var(--rule);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .grid-guides {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grid-guides {
+    transform: none !important;
+  }
+}
+
+@media print {
+  .grid-guides {
+    display: none !important;
+  }
+}
+
+.content-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--grid-gutter);
+}
+
+@media (min-width: 768px) {
+  .content-grid {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-grid {
+    grid-template-columns: repeat(12, 1fr);
+  }
+}
+
+.col-full {
+  grid-column: 1 / -1;
+}
+
+/* ---------------------------------------------------------------------
+   Hairline system — §4.2. Two weights only. No shadows. No radius
+   above 2px except tags/buttons/client-nodes.
+--------------------------------------------------------------------- */
+
+.rule {
+  border: none;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  margin: 0;
+}
+
+.rule--emphasis {
+  border-top-width: var(--rule-emphasis-w);
+  border-top-color: var(--rule-emphasis);
+}
+
+.rule-v {
+  border-left: var(--rule-hairline-w) solid var(--rule);
+}
+
+/* ---------------------------------------------------------------------
+   Header / nav — §7
+--------------------------------------------------------------------- */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg);
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.site-header__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+}
+
+.site-header__rule-extend {
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  width: 0;
+  height: var(--rule-hairline-w);
+  background: var(--rule);
+}
+
+.site-header.is-scrolled {
+  border-bottom-color: var(--rule-emphasis);
+}
+
+.primary-nav {
+  display: none;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.primary-nav a {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ink-muted);
+  padding: var(--space-2) 0;
+  border-bottom: var(--rule-hairline-w) solid transparent;
+  transition: color var(--motion-fast), border-color var(--motion-fast);
+}
+
+.primary-nav a:hover,
+.primary-nav a[aria-current="page"] {
+  color: var(--ink);
+  border-bottom-color: var(--signal);
+}
+
+@media (min-width: 768px) {
+  .primary-nav {
+    display: flex;
+  }
+
+  .nav-toggle {
+    display: none;
+  }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.nav-toggle {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: none;
+  border: var(--rule-hairline-w) solid var(--rule);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+
+.mobile-nav {
+  display: none;
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.mobile-nav.is-open {
+  display: block;
+}
+
+.mobile-nav a {
+  display: block;
+  padding: var(--space-3) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  text-decoration: none;
+  color: var(--ink);
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+@media (min-width: 768px) {
+  .mobile-nav {
+    display: none !important;
+  }
+}
+
+/* .palette-hint — header chrome only. The palette overlay/dialog itself
+   (F2) lives in its own stylesheet; this badge is real now even though
+   clicking it is a no-op until F2 wires the actual command palette. */
+.palette-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+  background: none;
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  transition: border-color var(--motion-fast), color var(--motion-fast);
+}
+
+.palette-hint:hover,
+.palette-hint:focus-visible {
+  border-color: var(--signal);
+  color: var(--ink);
+}
+
+.palette-hint kbd {
+  font-family: var(--face-mono);
+  font-size: 0.75rem;
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: 1px 5px;
+  background: var(--bg-raised);
+}
+
+@media (max-width: 767px) {
+  .palette-hint {
+    display: none;
+  }
+}
+
+.theme-toggle {
+  background: none;
+  border: var(--rule-hairline-w) solid var(--rule);
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-family: var(--face-mono);
+  color: var(--ink);
+  transition: border-color var(--motion-fast);
+}
+
+.theme-toggle:hover {
+  border-color: var(--signal);
+}
+
+.theme-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.theme-toggle .icon-moon {
+  display: none;
+}
+
+/* icon swap handled with data-theme attribute selectors */
+[data-theme="dark"] .theme-toggle .icon-sun {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle .icon-moon {
+  display: block;
+}
+
+/* ---------------------------------------------------------------------
+   Metadata strip — home sub-header
+--------------------------------------------------------------------- */
+
+.meta-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  padding: var(--space-4) 0;
+}
+
+.meta-strip__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+  border-left: var(--rule-hairline-w) solid var(--rule);
+}
+
+.meta-strip__item:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+.meta-strip__item dt {
+  font-family: var(--face-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.meta-strip__item dd {
+  font-family: var(--face-mono);
+  font-size: var(--text-mono-size);
+  margin: 0;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--success);
+  border-radius: 50%;
+  margin-right: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  .meta-strip {
+    gap: var(--space-4);
+  }
+
+  .meta-strip__item {
+    padding-left: var(--space-4);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Project index row
+--------------------------------------------------------------------- */
+
+.project-row {
+  display: block;
+  padding: var(--space-6) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.project-row:last-child {
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.project-row__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.project-row__title {
+  font-family: var(--face-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  text-underline-offset: 4px;
+  text-decoration-color: transparent;
+  transition: text-decoration-color var(--motion-fast);
+}
+
+.project-row:hover .project-row__title,
+.project-row:focus-visible .project-row__title {
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+}
+
+.project-row__years {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.project-row__summary {
+  color: var(--ink-muted);
+  margin-bottom: var(--space-3);
+}
+
+@media (max-width: 767px) {
+  .project-row__top {
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Tags — §7. 2px radius, the one permitted radius outside buttons.
+--------------------------------------------------------------------- */
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tag {
+  font-family: var(--face-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  padding: var(--space-1) var(--space-2);
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  background: var(--bg);
+}
+
+.tag--interactive {
+  cursor: pointer;
+  transition: border-color var(--motion-fast), color var(--motion-fast);
+}
+
+.tag--interactive:hover,
+.tag--interactive[aria-pressed="true"] {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+
+/* ---------------------------------------------------------------------
+   Case-study header
+--------------------------------------------------------------------- */
+
+.study-header {
+  padding: var(--space-7) 0 var(--space-6);
+}
+
+.study-header__title {
+  margin-bottom: var(--space-4);
+  max-width: 20ch;
+}
+
+.study-header__summary {
+  margin-bottom: var(--space-5);
+  color: var(--ink-muted);
+}
+
+.study-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  align-items: center;
+}
+
+/* ---------------------------------------------------------------------
+   Callout — §7. Left border only, never a fill.
+--------------------------------------------------------------------- */
+
+.callout {
+  border-left: var(--rule-emphasis-w) solid var(--rule-emphasis);
+  padding: var(--space-1) 0 var(--space-1) var(--space-4);
+  margin: var(--space-6) 0;
+  max-width: 68ch;
+}
+
+.callout p {
+  color: var(--ink);
+}
+
+.callout__label {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+/* ---------------------------------------------------------------------
+   Code block
+--------------------------------------------------------------------- */
+
+.code-block {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  background: var(--bg-raised);
+  border: var(--rule-hairline-w) solid var(--rule);
+  padding: var(--space-4);
+  overflow-x: auto;
+  white-space: pre;
+  margin: var(--space-5) 0;
+}
+
+/* ---------------------------------------------------------------------
+   Section article prose
+--------------------------------------------------------------------- */
+
+.prose-section {
+  padding: var(--space-6) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+}
+
+.prose-section h3 {
+  margin-bottom: var(--space-4);
+}
+
+.prose-section p + p {
+  margin-top: var(--space-4);
+}
+
+.prose-section ul {
+  margin: var(--space-4) 0 0;
+  padding-left: var(--space-5);
+  max-width: 68ch;
+}
+
+.prose-section li + li {
+  margin-top: var(--space-2);
+}
+
+/* ---------------------------------------------------------------------
+   Buttons + forms
+--------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: var(--space-3) var(--space-4);
+  border: var(--rule-hairline-w) solid var(--ink);
+  border-radius: 2px;
+  background: var(--ink);
+  color: var(--bg);
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity var(--motion-fast);
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.btn--outline {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--rule);
+}
+
+.btn--outline:hover {
+  border-color: var(--signal);
+  color: var(--signal);
+  opacity: 1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.field label {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+
+.field input,
+.field textarea {
+  font-family: var(--face-body);
+  font-size: var(--text-body-size);
+  padding: var(--space-3);
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 0;
+  background: var(--bg);
+  color: var(--ink);
+  transition: border-color var(--motion-fast);
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--signal);
+  outline: none;
+}
+
+.field--error input,
+.field--error textarea {
+  border-color: var(--danger);
+}
+
+.field__error {
+  font-family: var(--face-mono);
+  font-size: 0.75rem;
+  color: var(--danger);
+}
+
+.field--honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.form-status {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  padding: var(--space-3) var(--space-4);
+  border: var(--rule-hairline-w) solid var(--rule);
+  margin-top: var(--space-3);
+  display: none;
+}
+
+.form-status.is-visible {
+  display: block;
+}
+
+.form-status--success {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.form-status--error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.form-status--rate-limited {
+  border-color: var(--ink-muted);
+  color: var(--ink-muted);
+}
+
+/* ---------------------------------------------------------------------
+   CV sections
+--------------------------------------------------------------------- */
+
+.cv-section {
+  padding: var(--space-6) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+}
+
+.cv-entry {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .cv-entry {
+    grid-template-columns: 200px 1fr;
+    gap: var(--space-5);
+  }
+}
+
+.cv-entry__dates {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+}
+
+.cv-entry__title {
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.cv-entry__subtitle {
+  color: var(--ink-muted);
+  margin-bottom: var(--space-2);
+}
+
+/* ---------------------------------------------------------------------
+   Footer
+--------------------------------------------------------------------- */
+
+.site-footer {
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  padding: var(--space-6) 0;
+  margin-top: var(--space-8);
+}
+
+.site-footer__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.site-footer__links {
+  display: flex;
+  gap: var(--space-5);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-footer__links a {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  text-decoration: none;
+  color: var(--ink-muted);
+}
+
+.site-footer__links a:hover {
+  color: var(--signal);
+}
+
+.site-footer__built {
+  color: var(--ink-muted);
+}
+
+.site-footer__built a {
+  color: var(--ink-muted);
+}
+
+@media (max-width: 767px) {
+  .site-footer__row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Inline links in prose
+--------------------------------------------------------------------- */
+
+/* Underline sweep: a muted hairline sits under the link at rest (so
+   it's always identifiable as a link, not just on hover); on hover a
+   signal-blue line sweeps in left-to-right over it. Two background
+   layers rather than text-decoration, since text-decoration-color
+   can transition color but not grow a width. */
+.prose-section a,
+.callout a,
+p a,
+.link-inline {
+  color: var(--ink);
+  text-decoration: none;
+  background-image: linear-gradient(var(--signal), var(--signal)),
+    linear-gradient(var(--rule), var(--rule));
+  background-repeat: no-repeat, no-repeat;
+  background-position: 0 100%, 0 100%;
+  background-size: 0% 1px, 100% 1px;
+  transition: background-size 180ms var(--ease-standard), color var(--motion-fast);
+}
+
+.prose-section a:hover,
+.callout a:hover,
+p a:hover,
+.link-inline:hover,
+.prose-section a:focus-visible,
+.callout a:focus-visible,
+p a:focus-visible,
+.link-inline:focus-visible {
+  color: var(--signal);
+  background-size: 100% 1px, 100% 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prose-section a,
+  .callout a,
+  p a,
+  .link-inline {
+    transition: color var(--motion-fast);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   404 page
+--------------------------------------------------------------------- */
+
+.error-page {
+  min-height: calc(100vh - 73px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-5);
+  padding: var(--space-8) var(--grid-margin);
+}
+
+.error-page__code {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* ---------------------------------------------------------------------
+   Section title row (used for index pages)
+--------------------------------------------------------------------- */
+
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--space-6) 0 var(--space-4);
+}
+
+/* ---------------------------------------------------------------------
+   Page hero (non-home pages)
+--------------------------------------------------------------------- */
+
+.page-hero {
+  padding: var(--space-7) 0 var(--space-6);
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.page-hero p {
+  margin-top: var(--space-4);
+  color: var(--ink-muted);
+}
+
+/* ---------------------------------------------------------------------
+   Reduced motion — global guard
+--------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   utility
+--------------------------------------------------------------------- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+  margin: -1px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.gap-2 {
+  gap: var(--space-2);
+}
+.gap-3 {
+  gap: var(--space-3);
+}
+.gap-4 {
+  gap: var(--space-4);
+}
+
+.mobile-nav__palette {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  background: none;
+  color: var(--signal);
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------
+   Status strip — PRD-frontend-schematic.md §6.2, §7. Adapted from
+   Console's, trimmed to two fields (build, last deploy — uptime
+   dropped) and given a homepage-prominent variant so the tech signal
+   actually lands above the fold, not just in the footer. "Passing"
+   uses --success (the token already reserved for form confirmation),
+   never --signal, per §4.4's single-accent rule.
+--------------------------------------------------------------------- */
+
+.status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+}
+
+.status-strip--footer {
+  border-top: var(--rule-emphasis-w) solid var(--rule);
+  padding: var(--space-3) 0;
+}
+
+.status-strip--prominent {
+  border-top: var(--rule-hairline-w) solid var(--rule);
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+  padding: var(--space-4) 0;
+  margin: var(--space-6) 0;
+}
+
+.status-strip__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.status-strip__glyph {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+}
+
+.status-strip__glyph.is-failing {
+  background: var(--danger);
+}
+
+.status-strip__glyph.is-pulsing {
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-strip__glyph.is-pulsing {
+    animation: none !important;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .status-strip__item:not(:first-child) {
+    display: none;
+  }
+}

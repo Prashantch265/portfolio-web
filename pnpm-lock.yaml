@@ -105,6 +105,12 @@ importers:
 
   apps/web:
     dependencies:
+      '@portfolio/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@portfolio/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       next:
         specifier: ^15.1.0
         version: 15.5.26(@types/node@22.20.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -158,6 +164,31 @@ importers:
       eslint:
         specifier: ^9.17.0
         version: 9.39.5
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/ui:
+    dependencies:
+      '@portfolio/types':
+        specifier: workspace:*
+        version: link:../types
+      react:
+        specifier: ^19.0.0
+        version: 19.3.0
+    devDependencies:
+      '@portfolio/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.3.0
+      eslint:
+        specifier: ^9.17.0
+        version: 9.39.5
+      next:
+        specifier: ^15.1.0
+        version: 15.5.26(@types/node@22.20.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
