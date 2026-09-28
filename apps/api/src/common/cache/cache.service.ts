@@ -35,4 +35,21 @@ export class CacheService {
 
     return value;
   }
+
+  /**
+   * The real invalidation point (backend PRD §14 — "cache invalidated
+   * on publish, not TTL alone"): every write path that changes what a
+   * cached read would return calls this with the same key(s) that read
+   * uses. Swallows a Redis failure the same way `wrap` does — a failed
+   * invalidation degrades to "stale for up to the TTL," never an error
+   * on the write path that caused it.
+   */
+  async invalidate(...keys: string[]): Promise<void> {
+    if (keys.length === 0) return;
+    try {
+      await this.redis.del(...keys);
+    } catch (err) {
+      this.logger.warn(`Cache invalidation failed for keys [${keys.join(", ")}]: ${(err as Error).message}`);
+    }
+  }
 }
