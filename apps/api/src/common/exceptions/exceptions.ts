@@ -65,3 +65,9 @@ export class ServiceUnavailableException extends CustomHttpException {
     super(HttpStatus.SERVICE_UNAVAILABLE, message, source);
   }
 }
+
+export class TooManyRequestsException extends CustomHttpException {
+  constructor(message = "Too many requests.", source: unknown = null) {
+    super(HttpStatus.TOO_MANY_REQUESTS, message, source);
+  }
+}

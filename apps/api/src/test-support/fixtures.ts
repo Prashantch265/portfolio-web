@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import * as bcrypt from "bcrypt";
+import { authenticator } from "otplib";
 import type { DrizzleDb } from "../db/drizzle.tokens.js";
 import * as schema from "../db/schema/index.js";
 
@@ -57,4 +59,26 @@ export function makePostRow(overrides: Partial<typeof schema.posts.$inferInsert>
 export async function cleanupBySlugPrefix(db: DrizzleDb, table: typeof schema.projects | typeof schema.posts, prefix: string) {
   const { like } = await import("drizzle-orm");
   await db.delete(table).where(like(table.slug, `${prefix}%`));
+}
+
+/** Real bcrypt hash + real TOTP secret — tests generate real codes
+ * against it (otplib's authenticator.generate), not a stubbed check. */
+export async function insertAdminFixture(
+  db: DrizzleDb,
+  overrides: { email?: string; password?: string } = {},
+) {
+  const email = overrides.email ?? `test-admin-${randomUUID()}@example.com`;
+  const password = overrides.password ?? "correct-horse-battery-staple";
+  const totpSecret = authenticator.generateSecret();
+  const passwordHash = await bcrypt.hash(password, 4); // low cost factor — tests only, speed over security here
+
+  const [row] = await db.insert(schema.adminUsers).values({ email, passwordHash, totpSecret }).returning();
+  if (!row) throw new Error("Fixture insert returned no row");
+
+  return { ...row, plainPassword: password };
+}
+
+export async function cleanupAdminByEmailPrefix(db: DrizzleDb, prefix: string) {
+  const { like } = await import("drizzle-orm");
+  await db.delete(schema.adminUsers).where(like(schema.adminUsers.email, `${prefix}%`));
 }
