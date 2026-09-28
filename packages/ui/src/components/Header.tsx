@@ -17,13 +17,35 @@ const NAV_LINKS = [
 const RULE_SEEN_KEY = "schematic-rule-seen";
 
 /**
+ * The command palette dialog's id, from packages/command-palette's
+ * `COMMAND_PALETTE_DIALOG_ID`. packages/ui can't import that constant
+ * (it must not depend on packages/command-palette — that would create a
+ * dependency cycle), so this literal is kept in sync with it by
+ * convention/comment on both sides instead.
+ */
+const PALETTE_DIALOG_ID = "command-palette";
+
+/**
  * `showRuleExtend`: the header's bottom hairline rule-extension is a
  * once-per-session homepage entrance (center-out, 300ms) — the mockup
  * only puts this element on index.html. Case-study nav treats /work as
  * the active tab too (case studies live under Work), matching the
  * mockup's own deliberate choice.
+ *
+ * `onOpenPalette`/`isPaletteOpen`: plain callback + boolean threaded in
+ * from the app layer, which owns the actual palette (via
+ * `useCommandPalette()` from packages/command-palette). Header itself
+ * never imports that package — see this file's `PALETTE_DIALOG_ID` note.
  */
-export function Header({ showRuleExtend = false }: { showRuleExtend?: boolean }) {
+export function Header({
+  showRuleExtend = false,
+  onOpenPalette,
+  isPaletteOpen = false,
+}: {
+  showRuleExtend?: boolean;
+  onOpenPalette?: () => void;
+  isPaletteOpen?: boolean;
+}) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -85,7 +107,7 @@ export function Header({ showRuleExtend = false }: { showRuleExtend?: boolean })
             ))}
           </nav>
           <div className="header-actions">
-            <PaletteHint />
+            <PaletteHint onClick={onOpenPalette} isOpen={isPaletteOpen} controls={PALETTE_DIALOG_ID} />
             <ThemeToggle />
             <button
               className="nav-toggle"
@@ -107,7 +129,20 @@ export function Header({ showRuleExtend = false }: { showRuleExtend?: boolean })
               {link.label}
             </Link>
           ))}
-          <button className="mobile-nav__palette" data-mobile-palette-open type="button" disabled aria-disabled="true">
+          <button
+            className="mobile-nav__palette"
+            data-mobile-palette-open
+            type="button"
+            aria-haspopup="dialog"
+            aria-expanded={isPaletteOpen}
+            aria-controls={PALETTE_DIALOG_ID}
+            onClick={() => {
+              // Mirrors the mockup's initMobileNav: close the mobile
+              // sheet before opening the palette.
+              setMobileOpen(false);
+              onOpenPalette?.();
+            }}
+          >
             search...
           </button>
         </Frame>
