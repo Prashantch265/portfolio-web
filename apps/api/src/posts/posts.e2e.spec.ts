@@ -40,7 +40,25 @@ describe("Posts (e2e)", () => {
   });
 
   it("paginates without repeating or skipping items across pages", async () => {
+    // Two fixture rows, not ambient seed data — a fresh CI database has
+    // no seeded posts at all (only apps/api/src/db/seed.ts populates
+    // those, and that's a separate, explicit pipeline step this test
+    // must not depend on). Dated far in the future so they always sort
+    // first regardless of whatever else is published, in any environment.
+    const [newer, older] = await Promise.all([
+      db
+        .insert(schema.posts)
+        .values(makePostRow({ slug: `${TEST_SLUG_PREFIX}page-a`, publishedAt: new Date("2099-01-02") }))
+        .returning(),
+      db
+        .insert(schema.posts)
+        .values(makePostRow({ slug: `${TEST_SLUG_PREFIX}page-b`, publishedAt: new Date("2099-01-01") }))
+        .returning(),
+    ]);
+    if (!newer[0] || !older[0]) throw new Error("Fixture insert returned no row");
+
     const page1 = await request(app.getHttpServer()).get("/api/posts?limit=1").expect(200);
+    expect(page1.body.data[0].slug).toBe(newer[0].slug);
     expect(page1.body.meta.hasMore).toBe(true);
     expect(page1.body.meta.nextCursor).toBeTypeOf("string");
 
@@ -48,6 +66,7 @@ describe("Posts (e2e)", () => {
       .get(`/api/posts?limit=1&cursor=${page1.body.meta.nextCursor}`)
       .expect(200);
 
+    expect(page2.body.data[0].slug).toBe(older[0].slug);
     expect(page2.body.data[0].slug).not.toBe(page1.body.data[0].slug);
   });
 
