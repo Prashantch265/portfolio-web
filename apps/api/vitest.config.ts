@@ -15,5 +15,14 @@ export default defineConfig({
   test: {
     passWithNoTests: true,
     environment: "node",
+    // Every e2e spec shares ONE real Postgres + Redis instance (this
+    // repo's whole testing philosophy — no mocked repository). Each
+    // file's own beforeEach flushes Redis for its own isolation; running
+    // spec FILES in parallel (vitest's default) means one file's flush
+    // can wipe out another file's just-created state mid-test — a real,
+    // observed flake, not a hypothetical one. Serializing file execution
+    // removes the whole race category rather than papering over one
+    // symptom of it.
+    fileParallelism: false,
   },
 });
