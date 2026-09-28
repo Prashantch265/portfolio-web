@@ -1,11 +1,6 @@
 import type { ProjectWithNav } from "@portfolio/types";
+import { cv, githubActivity, posts, projects, stackLayers, statusStrip } from "@portfolio/content";
 import type { ContentSource } from "./content-source";
-import { cv } from "./static/cv";
-import { githubActivity } from "./static/github-activity";
-import { posts } from "./static/posts";
-import { projects } from "./static/projects";
-import { stackLayers } from "./static/stack-layers";
-import { statusStrip } from "./static/status-strip";
 
 function withNav(): ProjectWithNav[] {
   // Derived from array order, not hand-authored — the mockup's own
