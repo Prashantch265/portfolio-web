@@ -8,6 +8,44 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # Real Postgres + Redis, not mocked — apps/api's e2e specs boot the
+    # real AppModule and hit real HTTP routes against a real database
+    # (nestjs-craft testing convention: a mocked repository only proves
+    # the mock returns what the test told it to).
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: portfolio
+          POSTGRES_PASSWORD: portfolio
+          POSTGRES_DB: portfolio
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U portfolio -d portfolio"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://portfolio:portfolio@localhost:5432/portfolio
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      SESSION_SECRET: ci-session-secret-at-least-32-characters
+      ADMIN_EMAIL: admin@example.com
+      MAIL_PROVIDER: console
+      MAIL_API_KEY: ci-key
+      MAIL_FROM_ADDRESS: no-reply@example.com
+      SITE_ORIGIN: http://localhost:3000
+      ANALYTICS_SALT: ci-analytics-salt
     steps:
       - uses: actions/checkout@v4
 
@@ -20,6 +58,12 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # Explicit pipeline step (backend PRD §15) — mirrors how a real
+      # deploy migrates before the app receives traffic, and gives the
+      # test step a real, migrated schema instead of an empty database.
+      - name: Run api migrations
+        run: pnpm --filter @portfolio/api db:migrate
 
       - name: Lint, typecheck, test, build
         run: pnpm turbo run lint typecheck test build
