@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Put, Post, UseGuards, UsePipes } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Put, Post, UseGuards } from "@nestjs/common";
 import { ApiExcludeController } from "@nestjs/swagger";
 import { AdminAuthGuard } from "../admin-auth/admin-auth.guard.js";
 import { SuccessMessage } from "../common/decorators/success-message.decorator.js";
@@ -21,8 +21,7 @@ export class AdminCvController {
 
   @Put("profile")
   @SuccessMessage("CV profile saved successfully.")
-  @UsePipes(new ZodValidationPipe(updateCvProfileDtoSchema))
-  updateProfile(@Body() dto: UpdateCvProfileDto) {
+  updateProfile(@Body(new ZodValidationPipe(updateCvProfileDtoSchema)) dto: UpdateCvProfileDto) {
     return this.cvService.upsertProfile(dto);
   }
 
@@ -34,15 +33,16 @@ export class AdminCvController {
 
   @Post("sections")
   @SuccessMessage("CV section created successfully.")
-  @UsePipes(new ZodValidationPipe(upsertCvSectionDtoSchema))
-  createSection(@Body() dto: UpsertCvSectionDto) {
+  createSection(@Body(new ZodValidationPipe(upsertCvSectionDtoSchema)) dto: UpsertCvSectionDto) {
     return this.cvService.createSection(dto);
   }
 
   @Put("sections/:id")
   @SuccessMessage("CV section updated successfully.")
-  @UsePipes(new ZodValidationPipe(upsertCvSectionDtoSchema))
-  updateSection(@Param("id", ParseUUIDPipe) id: string, @Body() dto: UpsertCvSectionDto) {
+  updateSection(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(upsertCvSectionDtoSchema)) dto: UpsertCvSectionDto,
+  ) {
     return this.cvService.updateSection(id, dto);
   }
 

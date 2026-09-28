@@ -1,4 +1,4 @@
-import { boolean, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 /**
  * M1a — backend PRD §4 entities. Only the tables M1b's public read
@@ -33,6 +33,13 @@ import { boolean, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex,
  */
 
 export const contentStatus = pgEnum("content_status", ["draft", "published"]);
+export const revisionEntityType = pgEnum("revision_entity_type", [
+  "project",
+  "caseStudySection",
+  "post",
+  "page",
+  "diagram",
+]);
 export const caseStudySectionKind = pgEnum("case_study_section_kind", [
   "context",
   "constraints",
@@ -73,6 +80,18 @@ export const projects = pgTable("projects", {
   stackTags: text("stack_tags").array().notNull().default([]),
   order: integer("order").notNull().default(0),
   publishedAt: timestamp("published_at", { withTimezone: true }),
+  // M1d's draft/publish mechanism (deliberately deferred in M1a until
+  // the CRUD shape was known): while status='draft', every write lands
+  // directly on this row's own columns above — there is nothing public
+  // to protect yet. Once status='published', a write instead merges
+  // into this jsonb blob (own scalar fields, plus a nested `sections`
+  // object holding pending CaseStudySection bodies — a case study
+  // "publishes as a whole, not section-by-section" per PRD §4, so a
+  // section edit on a published project routes here too, never onto
+  // the section's own row). Publishing copies everything in here onto
+  // the live columns (project's own + each case_study_sections row) in
+  // one transaction, then clears this back to null.
+  draftData: jsonb("draft_data"),
   ...timestamps,
 });
 
@@ -108,6 +127,12 @@ export const diagrams = pgTable(
     textEquivalent: jsonb("text_equivalent").notNull(),
     version: integer("version").notNull().default(1),
     publishedVersion: integer("published_version"),
+    // Same draft/publish shape as projects.draftData — pending
+    // nodes/edges/groups/textEquivalent, applied to the live columns
+    // above on publish. `version` increments on every save regardless
+    // of draft or live; `publishedVersion` records which version
+    // number was live-copied most recently.
+    draftData: jsonb("draft_data"),
     ...timestamps,
   },
   (table) => [uniqueIndex("diagrams_owner_idx").on(table.ownerType, table.ownerId)],
@@ -128,6 +153,8 @@ export const posts = pgTable("posts", {
   tags: text("tags").array().notNull().default([]),
   publishedAt: timestamp("published_at", { withTimezone: true }),
   readingMinutes: integer("reading_minutes").notNull(),
+  // Same draft/publish shape as projects.draftData.
+  draftData: jsonb("draft_data"),
   ...timestamps,
 });
 
@@ -197,3 +224,29 @@ export const cvSections = pgTable("cv_sections", {
   order: integer("order").notNull().default(0),
   ...timestamps,
 });
+
+/**
+ * M1d — backend PRD §6.3. Append-only: every draft or publish write to
+ * a versioned entity writes one row here first (same transaction), a
+ * full snapshot of the resulting effective state — never an id-only or
+ * diff-only record, so restore never needs to reconstruct history from
+ * anything but this one row. Not written for CVProfile/CVSection or
+ * Tag — both excluded by the PRD's own §4 model.
+ */
+export const revisions = pgTable(
+  "revisions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entityType: revisionEntityType("entity_type").notNull(),
+    entityId: uuid("entity_id").notNull(),
+    snapshot: jsonb("snapshot").notNull(),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => adminUsers.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  // Not unique — many revisions accumulate for the same entity over
+  // time by design. Indexed (not uniquely) for the admin revisions
+  // list query's WHERE + ORDER BY.
+  (table) => [index("revisions_entity_idx").on(table.entityType, table.entityId, table.createdAt)],
+);
