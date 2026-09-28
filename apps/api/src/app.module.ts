@@ -12,6 +12,7 @@ import { PostsModule } from "./posts/posts.module.js";
 import { PagesModule } from "./pages/pages.module.js";
 import { SyndicationModule } from "./syndication/syndication.module.js";
 import { AdminAuthModule } from "./admin-auth/admin-auth.module.js";
+import { CvModule } from "./cv/cv.module.js";
 import { LoggingInterceptor } from "./common/interceptors/logging.interceptor.js";
 import { ResponseInterceptor } from "./common/interceptors/response.interceptor.js";
 import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe.js";
@@ -32,6 +33,7 @@ import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe.js";
     PagesModule,
     SyndicationModule,
     AdminAuthModule,
+    CvModule,
   ],
   providers: [
     {
