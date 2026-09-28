@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DiagramFrame } from "@portfolio/diagram";
 import { Body, ButtonLink, Display, Footer, Frame, GridGuides, Header, Heading, StatusStrip, Tag, TagList } from "@portfolio/ui";
 import { contentSource } from "../lib/content/index";
 
@@ -82,9 +83,15 @@ export default async function HomePage() {
                     ))}
                   </TagList>
                 </Link>
-                {/* TODO(F1): architecture diagram — packages/diagram renderer
-                    lands in its own milestone. Omitted here rather than a
-                    fake placeholder. */}
+                {top.diagram && (
+                  <DiagramFrame
+                    diagram={top.diagram}
+                    caption={`${top.title} — architecture`}
+                    variant="panel-side"
+                    compact
+                    style={{ marginTop: "var(--space-5)" }}
+                  />
+                )}
               </article>
             )}
 
