@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards, UsePipes } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from "@nestjs/common";
 import { ApiExcludeController } from "@nestjs/swagger";
 import { SuccessMessage } from "../common/decorators/success-message.decorator.js";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe.js";
@@ -20,16 +20,14 @@ export class AdminAuthController {
   @Post("login")
   @HttpCode(HttpStatus.OK)
   @SuccessMessage("TOTP verification required.")
-  @UsePipes(new ZodValidationPipe(loginDtoSchema))
-  login(@Body() dto: LoginDto, @Req() req: RequestWithAdmin) {
+  login(@Body(new ZodValidationPipe(loginDtoSchema)) dto: LoginDto, @Req() req: RequestWithAdmin) {
     return this.adminAuthService.login(dto, req.ip ?? "unknown");
   }
 
   @Post("totp")
   @HttpCode(HttpStatus.OK)
   @SuccessMessage("Login successful.")
-  @UsePipes(new ZodValidationPipe(verifyTotpDtoSchema))
-  async verifyTotp(@Body() dto: VerifyTotpDto, @Req() req: RequestWithAdmin) {
+  async verifyTotp(@Body(new ZodValidationPipe(verifyTotpDtoSchema)) dto: VerifyTotpDto, @Req() req: RequestWithAdmin) {
     const { adminId, email } = await this.adminAuthService.verifyTotp(dto, req.ip ?? "unknown");
 
     // Regenerate the session id BEFORE writing adminId into it — a

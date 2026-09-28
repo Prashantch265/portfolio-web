@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UsePipes } from "@nestjs/common";
+import { Controller, Get, Param, Query } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { SuccessMessage } from "../common/decorators/success-message.decorator.js";
 import { NotFoundException } from "../common/exceptions/exceptions.js";
@@ -14,8 +14,7 @@ export class ProjectsController {
   @Get()
   @ApiOperation({ summary: "List published projects, optionally filtered to featured only" })
   @SuccessMessage("Projects retrieved successfully.")
-  @UsePipes(new ZodValidationPipe(listProjectsQuerySchema))
-  findAll(@Query() query: { featured?: boolean }) {
+  findAll(@Query(new ZodValidationPipe(listProjectsQuerySchema)) query: { featured?: boolean }) {
     return this.projectsService.getProjects(query.featured);
   }
 

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UsePipes } from "@nestjs/common";
+import { Controller, Get, Param, Query } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { SuccessMessage } from "../common/decorators/success-message.decorator.js";
 import { NotFoundException } from "../common/exceptions/exceptions.js";
@@ -14,8 +14,7 @@ export class PostsController {
   @Get()
   @ApiOperation({ summary: "Cursor-paginated list of published posts" })
   @SuccessMessage("Posts retrieved successfully.")
-  @UsePipes(new ZodValidationPipe(listPostsQuerySchema))
-  findAll(@Query() query: ListPostsQuery) {
+  findAll(@Query(new ZodValidationPipe(listPostsQuerySchema)) query: ListPostsQuery) {
     return this.postsService.getPosts(query.limit, query.cursor);
   }
 

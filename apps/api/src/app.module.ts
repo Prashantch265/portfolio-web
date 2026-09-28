@@ -13,6 +13,8 @@ import { PagesModule } from "./pages/pages.module.js";
 import { SyndicationModule } from "./syndication/syndication.module.js";
 import { AdminAuthModule } from "./admin-auth/admin-auth.module.js";
 import { CvModule } from "./cv/cv.module.js";
+import { RevisionsModule } from "./revisions/revisions.module.js";
+import { TagsModule } from "./tags/tags.module.js";
 import { LoggingInterceptor } from "./common/interceptors/logging.interceptor.js";
 import { ResponseInterceptor } from "./common/interceptors/response.interceptor.js";
 import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe.js";
@@ -34,6 +36,8 @@ import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe.js";
     SyndicationModule,
     AdminAuthModule,
     CvModule,
+    RevisionsModule,
+    TagsModule,
   ],
   providers: [
     {

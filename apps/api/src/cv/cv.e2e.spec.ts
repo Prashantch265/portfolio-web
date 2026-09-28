@@ -103,6 +103,23 @@ describe("CV (e2e)", () => {
     );
     expect(titles).not.toContain("Gated-only test cert");
 
+    // PUT has both a route @Param and a @Body on the same handler — a
+    // real bug here once had the ZodValidationPipe applied at the
+    // method level validate the raw :id string against the body's
+    // schema too, failing every such request with a 422. Exercising it
+    // directly so a regression here fails a test, not just a code review.
+    const updated = await agent
+      .put(`/api/admin/cv/sections/${created.body.data.id}`)
+      .send({
+        kind: "certifications",
+        title: "Gated-only test cert (renamed)",
+        subtitle: "still gated",
+        visibility: "gated",
+        order: 999,
+      })
+      .expect(200);
+    expect(updated.body.data.title).toBe("Gated-only test cert (renamed)");
+
     await agent.delete(`/api/admin/cv/sections/${created.body.data.id}`).expect(200);
   });
 
