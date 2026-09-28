@@ -2,14 +2,14 @@ import type { INestApplication } from "@nestjs/common";
 import type Redis from "ioredis";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
+import { authenticator } from "otplib";
 import { cvSchema } from "@portfolio/types";
 import { createTestApp } from "../test-support/create-test-app.js";
 import { insertAdminFixture, cleanupAdminByEmailPrefix } from "../test-support/fixtures.js";
 import { DRIZZLE, type DrizzleDb } from "../db/drizzle.tokens.js";
 import { REDIS_CLIENT } from "../redis/redis.tokens.js";
 import * as schema from "../db/schema/index.js";
-import { authenticator } from "otplib";
-import { eq } from "drizzle-orm";
 
 const TEST_EMAIL_PREFIX = "test-admin-cv-";
 
@@ -26,11 +26,36 @@ describe("CV (e2e)", () => {
   let app: INestApplication;
   let db: DrizzleDb;
   let redis: Redis;
+  let profile: typeof schema.cvProfiles.$inferSelect;
+  let createdProfileFixture = false;
 
   beforeAll(async () => {
     app = await createTestApp();
     db = app.get(DRIZZLE);
     redis = app.get(REDIS_CLIENT);
+
+    // A fresh CI database has no seeded CVProfile at all (M1a's
+    // seed.ts is a separate, explicit pipeline step this suite must
+    // not depend on) — CVProfile is a real singleton in production, so
+    // ensure exactly one exists rather than assuming one already does.
+    const existing = await db.query.cvProfiles.findFirst();
+    if (existing) {
+      profile = existing;
+    } else {
+      const [inserted] = await db
+        .insert(schema.cvProfiles)
+        .values({
+          headline: "Test headline",
+          location: "Test location",
+          yearsExperience: "~1 year",
+          summaryPublic: "Original public summary.",
+          summaryGated: null,
+        })
+        .returning();
+      if (!inserted) throw new Error("Fixture insert returned no row");
+      profile = inserted;
+      createdProfileFixture = true;
+    }
   });
 
   beforeEach(async () => {
@@ -39,6 +64,7 @@ describe("CV (e2e)", () => {
 
   afterAll(async () => {
     await cleanupAdminByEmailPrefix(db, TEST_EMAIL_PREFIX);
+    if (createdProfileFixture) await db.delete(schema.cvProfiles).where(eq(schema.cvProfiles.id, profile.id));
     await app.close();
   });
 
@@ -82,15 +108,13 @@ describe("CV (e2e)", () => {
 
   it("PUT /api/admin/cv/profile upserts the singleton profile and updates the public summary", async () => {
     const agent = await authenticatedAgent(app, db);
-    const before = await db.query.cvProfiles.findFirst();
-    if (!before) throw new Error("Expected a seeded CV profile to already exist");
 
     const res = await agent
       .put("/api/admin/cv/profile")
       .send({
-        headline: before.headline,
-        location: before.location,
-        yearsExperience: before.yearsExperience,
+        headline: profile.headline,
+        location: profile.location,
+        yearsExperience: profile.yearsExperience,
         summaryPublic: "Updated summary for the e2e test run.",
         summaryGated: null,
       })
@@ -100,9 +124,10 @@ describe("CV (e2e)", () => {
     const publicAfter = await request(app.getHttpServer()).get("/api/cv/public").expect(200);
     expect(publicAfter.body.data.summary).toBe("Updated summary for the e2e test run.");
 
-    // Restore — this profile is real seeded content other tests/manual
-    // verification also reads, not a disposable fixture.
-    await db.update(schema.cvProfiles).set({ summaryPublic: before.summaryPublic }).where(eq(schema.cvProfiles.id, before.id));
+    // Restore — real seeded content in a local dev DB is something
+    // other tests/manual verification also reads, not a disposable
+    // fixture, even though this suite doesn't require it to pre-exist.
+    await db.update(schema.cvProfiles).set({ summaryPublic: profile.summaryPublic }).where(eq(schema.cvProfiles.id, profile.id));
     await redis.flushall();
   });
 });
