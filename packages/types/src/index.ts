@@ -3,6 +3,7 @@ export * from "./env.js";
 export * from "./diagram.js";
 export * from "./project.js";
 export * from "./post.js";
+export * from "./page.js";
 export * from "./stack-layer.js";
 export * from "./cv.js";
 export * from "./github-activity.js";

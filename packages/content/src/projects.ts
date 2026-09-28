@@ -1,5 +1,5 @@
 import type { Project } from "@portfolio/types";
-import { agentPlatformDiagram, realEstateDiagram } from "./diagrams";
+import { agentPlatformDiagram, realEstateDiagram } from "./diagrams.js";
 
 /**
  * Ported verbatim from mockups/schematic/assets/data.js. One fix: each

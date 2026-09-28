@@ -41,6 +41,9 @@ importers:
       '@nestjs/swagger':
         specifier: ^11.4.7
         version: 11.4.7(@nestjs/common@11.2.6(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.6)(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)
+      '@portfolio/content':
+        specifier: workspace:*
+        version: link:../../packages/content
       '@portfolio/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -108,6 +111,9 @@ importers:
       '@portfolio/command-palette':
         specifier: workspace:*
         version: link:../../packages/command-palette
+      '@portfolio/content':
+        specifier: workspace:*
+        version: link:../../packages/content
       '@portfolio/diagram':
         specifier: workspace:*
         version: link:../../packages/diagram
@@ -185,6 +191,22 @@ importers:
       typescript-eslint:
         specifier: ^8.18.0
         version: 8.70.1(eslint@9.39.5)(typescript@5.9.3)
+
+  packages/content:
+    dependencies:
+      '@portfolio/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@portfolio/config':
+        specifier: workspace:*
+        version: link:../config
+      eslint:
+        specifier: ^9.17.0
+        version: 9.39.5
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
 
   packages/diagram:
     dependencies:
