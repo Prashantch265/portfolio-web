@@ -4,7 +4,12 @@ import { APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
 import { validate } from "./config/env.validation.js";
 import { DrizzleModule } from "./db/drizzle.module.js";
 import { RedisModule } from "./redis/redis.module.js";
+import { CacheModule } from "./common/cache/cache.module.js";
 import { HealthModule } from "./health/health.module.js";
+import { ProjectsModule } from "./projects/projects.module.js";
+import { PostsModule } from "./posts/posts.module.js";
+import { PagesModule } from "./pages/pages.module.js";
+import { SyndicationModule } from "./syndication/syndication.module.js";
 import { LoggingInterceptor } from "./common/interceptors/logging.interceptor.js";
 import { ResponseInterceptor } from "./common/interceptors/response.interceptor.js";
 import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe.js";
@@ -17,7 +22,12 @@ import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe.js";
     }),
     DrizzleModule,
     RedisModule,
+    CacheModule,
     HealthModule,
+    ProjectsModule,
+    PostsModule,
+    PagesModule,
+    SyndicationModule,
   ],
   providers: [
     {

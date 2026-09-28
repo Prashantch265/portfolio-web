@@ -14,7 +14,24 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": []
+      "outputs": [],
+      // apps/api's e2e specs boot the real AppModule against a real
+      // Postgres/Redis (nestjs-craft testing convention — no mocked
+      // repository) — turbo's default strict env mode otherwise strips
+      // these before the task ever sees them, regardless of what the
+      // invoking shell or CI job has set.
+      "env": [
+        "DATABASE_URL",
+        "REDIS_URL",
+        "SESSION_SECRET",
+        "ADMIN_EMAIL",
+        "MAIL_PROVIDER",
+        "MAIL_API_KEY",
+        "MAIL_FROM_ADDRESS",
+        "SITE_ORIGIN",
+        "ANALYTICS_SALT",
+        "NODE_ENV"
+      ]
     },
     "dev": {
       "cache": false,
