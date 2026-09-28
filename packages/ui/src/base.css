@@ -1138,3 +1138,194 @@ p a:focus-visible,
     display: none;
   }
 }
+
+/* ---------------------------------------------------------------------
+   /stack — ported verbatim from mockups/schematic/stack.html's inline
+   <style> block (page-specific, never used elsewhere, so it lives here
+   rather than in a component file). Structural sizes below (10px cells,
+   220px/200px columns, 3px gaps) have no matching --space-N token in
+   the scale and are literal in the mockup's own stylesheet too — not a
+   token-rule violation, just sizes nothing in the scale describes.
+--------------------------------------------------------------------- */
+
+.stack-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+}
+
+@media (min-width: 768px) {
+  .stack-row {
+    grid-template-columns: 220px 1fr 200px;
+    gap: var(--space-4);
+    align-items: baseline;
+  }
+}
+
+.stack-row__name {
+  font-family: var(--face-mono);
+  font-weight: 500;
+}
+
+.stack-row__note {
+  color: var(--ink-muted);
+}
+
+.stack-row__projects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.heatmap {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 1fr);
+  gap: 3px;
+  overflow-x: auto;
+  padding: var(--space-4) 0;
+}
+
+.heatmap__cell {
+  width: 10px;
+  height: 10px;
+  background: var(--rule);
+  opacity: 0.35;
+}
+
+.heatmap__cell[data-level="1"] {
+  background: var(--signal);
+  opacity: 0.25;
+}
+
+.heatmap__cell[data-level="2"] {
+  background: var(--signal);
+  opacity: 0.5;
+}
+
+.heatmap__cell[data-level="3"] {
+  background: var(--signal);
+  opacity: 0.75;
+}
+
+.heatmap__cell[data-level="4"] {
+  background: var(--signal);
+  opacity: 1;
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.repo-row {
+  padding: var(--space-4) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+}
+
+.repo-row__top {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: baseline;
+}
+
+.repo-row__name {
+  font-family: var(--face-mono);
+  font-weight: 500;
+}
+
+.repo-row__meta {
+  color: var(--ink-muted);
+}
+
+/* ---------------------------------------------------------------------
+   /brand — ported verbatim from mockups/schematic/brand.html's inline
+   <style> block. Same note as /stack above re: literal structural px.
+--------------------------------------------------------------------- */
+
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.swatch {
+  border: var(--rule-hairline-w) solid var(--rule);
+}
+
+.swatch__color {
+  height: 72px;
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+}
+
+.swatch__meta {
+  padding: var(--space-3);
+}
+
+.swatch__name {
+  font-family: var(--face-mono);
+  font-size: 0.75rem;
+}
+
+.swatch__value {
+  font-family: var(--face-mono);
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+  margin-top: var(--space-1);
+}
+
+.type-row {
+  padding: var(--space-5) 0;
+  border-top: var(--rule-hairline-w) solid var(--rule);
+}
+
+.type-row__label {
+  margin-bottom: var(--space-3);
+}
+
+.space-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+}
+
+.space-row__bar {
+  background: var(--signal);
+  height: 12px;
+}
+
+.space-row__label {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+  min-width: 120px;
+}
+
+.monogram-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.motion-demo-box {
+  width: 64px;
+  height: 64px;
+  border: var(--rule-hairline-w) solid var(--rule-emphasis);
+  background: var(--signal-fill);
+}
+
+.motion-demo-box.is-playing {
+  animation: diagram-node-in var(--motion-node) var(--ease-standard);
+}
+
+.taxonomy-block {
+  margin-top: var(--space-5);
+}
