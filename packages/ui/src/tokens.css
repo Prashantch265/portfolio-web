@@ -23,6 +23,11 @@
   --success: #2e7d4f;
   --on-signal: #ffffff;
 
+  /* scrim — full-screen dialog backdrop (command palette, F2). One
+     value, not themed: a dark translucent scrim reads correctly behind
+     both light and dark dialog content, same as the source mockup. */
+  --scrim: rgba(0, 0, 0, 0.5);
+
   /* grid */
   --grid-max: 1400px;
   --grid-margin: 64px;

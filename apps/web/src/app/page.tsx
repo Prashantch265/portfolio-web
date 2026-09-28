@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { DiagramFrame } from "@portfolio/diagram";
-import { Body, ButtonLink, Display, Footer, Frame, GridGuides, Header, Heading, StatusStrip, Tag, TagList } from "@portfolio/ui";
+import { Body, ButtonLink, Display, Footer, Frame, GridGuides, Heading, StatusStrip, Tag, TagList } from "@portfolio/ui";
 import { contentSource } from "../lib/content/index";
+import { PaletteHeader } from "./_components/palette-header";
 
 export default async function HomePage() {
-  const [featured, posts, cv, statusStrip] = await Promise.all([
+  const [featured, projects, posts, cv, statusStrip] = await Promise.all([
     contentSource.getFeaturedProjects(),
+    contentSource.getProjects(),
     contentSource.getPosts(),
     contentSource.getCV(),
     contentSource.getStatusStrip(),
@@ -15,7 +17,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <Header showRuleExtend />
+      <PaletteHeader showRuleExtend projects={projects} />
       <main>
         <Frame>
           <GridGuides />
