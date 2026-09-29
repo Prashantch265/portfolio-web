@@ -52,4 +52,22 @@ export class CacheService {
       this.logger.warn(`Cache invalidation failed for keys [${keys.join(", ")}]: ${(err as Error).message}`);
     }
   }
+
+  /**
+   * For a read cached under many keys that share one prefix but vary
+   * per-request (e.g. posts' cursor-paginated list — one key per
+   * limit/cursor combination, no single key covers "the list"). Uses
+   * SCAN, not KEYS — KEYS blocks the whole Redis instance while it
+   * walks the keyspace; SCAN doesn't.
+   */
+  async invalidatePattern(prefix: string): Promise<void> {
+    try {
+      const keys: string[] = [];
+      const stream = this.redis.scanStream({ match: `${prefix}*`, count: 100 });
+      for await (const chunk of stream as AsyncIterable<string[]>) keys.push(...chunk);
+      if (keys.length > 0) await this.redis.del(...keys);
+    } catch (err) {
+      this.logger.warn(`Cache pattern invalidation failed for prefix "${prefix}": ${(err as Error).message}`);
+    }
+  }
 }

@@ -6,6 +6,7 @@ import { SuccessMessage } from "../common/decorators/success-message.decorator.j
 import { CustomHttpException, NotFoundException } from "../common/exceptions/exceptions.js";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe.js";
 import { ProjectsService } from "../projects/projects.service.js";
+import { PostsService } from "../posts/posts.service.js";
 import { listRevisionsQuerySchema, type ListRevisionsQuery } from "./dto/list-revisions.query.js";
 import { RevisionsService } from "./revisions.service.js";
 
@@ -16,6 +17,7 @@ export class RevisionsController {
   constructor(
     private readonly revisionsService: RevisionsService,
     private readonly projectsService: ProjectsService,
+    private readonly postsService: PostsService,
   ) {}
 
   @Get()
@@ -26,9 +28,9 @@ export class RevisionsController {
 
   /**
    * Dispatches by entityType to whichever entity-specific admin
-   * service owns it (backend PRD §6.3). Only "project" is wired so
-   * far — Post/Diagram restore ship alongside their own admin CRUD in
-   * later M1d sub-slices, added as another case here, not stubbed
+   * service owns it (backend PRD §6.3). "project" and "post" are
+   * wired so far — Diagram restore ships alongside its own admin CRUD
+   * in a later M1d sub-slice, added as another case here, not stubbed
    * ahead of a real caller. "caseStudySection" never appears as a
    * revision's own entityType: a section edit is recorded as part of
    * its parent Project's revision snapshot (the nested-draft decision
@@ -44,6 +46,8 @@ export class RevisionsController {
     switch (revision.entityType) {
       case "project":
         return this.projectsService.restoreFromRevision(revision, req.admin.id);
+      case "post":
+        return this.postsService.restoreFromRevision(revision, req.admin.id);
       default:
         throw new CustomHttpException(
           HttpStatus.NOT_IMPLEMENTED,
