@@ -40,13 +40,28 @@ describe("Revisions admin (e2e)", () => {
     const seedAdmin = await insertAdminFixture(db, { email: `${TEST_EMAIL_PREFIX}seed-${crypto.randomUUID()}@example.com` });
     seedAdminId = seedAdmin.id;
 
-    // No entity writer calls RevisionsService.record() yet at this
-    // point in the build (that ships alongside Project admin CRUD) —
-    // seed the row directly to prove the list/filter query itself.
+    // Seeded directly to prove the list/filter query itself (this
+    // suite predates any real entity writer calling
+    // RevisionsService.record()). `createdAt` is set explicitly and
+    // spread apart — Postgres's `now()`/defaultNow() is transaction-
+    // start time, so a single multi-row INSERT (or any two rows
+    // committed within the same clock tick) can land with IDENTICAL
+    // timestamps, making "newest first" ordering nondeterministic. A
+    // real caller never inserts two revisions in one statement
+    // (RevisionsService.record() writes exactly one row per
+    // transaction), so this is a test-fixture-only hazard — see
+    // GOTCHA.md.
+    const base = Date.now();
     await db.insert(schema.revisions).values([
-      { entityType: "project", entityId, snapshot: { title: "v1" }, authorId: seedAdminId },
-      { entityType: "project", entityId, snapshot: { title: "v2" }, authorId: seedAdminId },
-      { entityType: "post", entityId: crypto.randomUUID(), snapshot: { title: "unrelated" }, authorId: seedAdminId },
+      { entityType: "project", entityId, snapshot: { title: "v1" }, authorId: seedAdminId, createdAt: new Date(base) },
+      { entityType: "project", entityId, snapshot: { title: "v2" }, authorId: seedAdminId, createdAt: new Date(base + 1000) },
+      {
+        entityType: "post",
+        entityId: crypto.randomUUID(),
+        snapshot: { title: "unrelated" },
+        authorId: seedAdminId,
+        createdAt: new Date(base + 2000),
+      },
     ]);
   });
 

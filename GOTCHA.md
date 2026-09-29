@@ -62,6 +62,14 @@ Needed the same real content (`projects.ts`, `posts.ts`, etc.) in both the web c
 
 **Fix:** extracted to `packages/content`, built exactly like `packages/types` (dist + main/types + exports map), imported by both apps instead of one importing the other.
 
+## Postgres `now()`/`defaultNow()` is transaction-start time, not per-row
+
+A single multi-row `INSERT ... VALUES (...), (...), (...)` (one implicit transaction) gives every row the SAME `now()` for a `timestamp().defaultNow()` column — Postgres's `now()` is fixed at transaction start, not evaluated per row. A test fixture that bulk-inserts several "revision" rows in one `.values([...])` call and then asserts "newest first" ordering by that column is nondeterministic — which row sorts first among ties depends on scan order, not insertion intent, and can flip between runs.
+
+Hit in `revisions.e2e.spec.ts`'s fixture (three rows, one insert, `createdAt` all identical) — passed by luck in earlier runs, failed locally once tie-break order changed.
+
+**Fix:** when a test needs deterministic ordering by a `defaultNow()` column, set `createdAt` explicitly per row, spread apart (e.g. `base`, `base + 1000ms`, ...) — don't rely on real insert timing or on splitting into separate statements (still theoretically tieable within one clock tick). Real production code isn't affected here — `RevisionsService.record()` writes exactly one row per transaction, never several at once.
+
 ## Postgres unique violation → 409
 
 Use `common/db/is-unique-violation.ts` (`err.code === "23505"`) to map DB unique-constraint violations to `ConflictException`. Don't duplicate this check per-service (was duplicated in `tags.service.ts` and `pages.service.ts` before being extracted).

@@ -5,6 +5,14 @@ import * as schema from "../db/schema/index.js";
 
 export type RevisionEntityType = (typeof schema.revisionEntityType.enumValues)[number];
 
+/**
+ * Only `insert` is needed here, deliberately narrower than `DrizzleDb` —
+ * drizzle's `db.transaction(async (tx) => ...)` callback param has a
+ * distinct (structurally compatible but nominally different) type from
+ * `NodePgDatabase`, and this is the only surface record() touches.
+ */
+type Writable = Pick<DrizzleDb, "insert">;
+
 @Injectable()
 export class RevisionsService {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDb) {}
@@ -18,7 +26,7 @@ export class RevisionsService {
    * own `this.db`.
    */
   async record(
-    tx: DrizzleDb,
+    tx: Writable,
     entityType: RevisionEntityType,
     entityId: string,
     snapshot: unknown,
