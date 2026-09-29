@@ -7,6 +7,7 @@ import {
   type ExceptionFilter,
 } from "@nestjs/common";
 import type { Request, Response } from "express";
+import { MulterError } from "multer";
 import { CustomHttpException } from "../exceptions/exceptions.js";
 import type { IErrorResponse } from "../interfaces/response.interface.js";
 
@@ -43,6 +44,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
       status = exception.getStatus();
       const body = exception.getResponse();
       message = typeof body === "string" ? body : ((body as { message?: string }).message ?? exception.message);
+    } else if (exception instanceof MulterError) {
+      // Multer's own errors (e.g. LIMIT_FILE_SIZE from the media
+      // upload route's server-enforced size cap) are plain Error
+      // subclasses, not HttpException — without this branch they'd
+      // fall through to a generic 500 instead of the client-actionable
+      // status their `.code` actually implies.
+      status = exception.code === "LIMIT_FILE_SIZE" ? HttpStatus.PAYLOAD_TOO_LARGE : HttpStatus.BAD_REQUEST;
+      message = exception.message;
     }
     // else: unrecognized Error/unknown throw — status/message stay generic.
     // The real detail goes to the log line below, never to the response body.

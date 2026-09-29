@@ -6,3 +6,5 @@ allowBuilds:
   '@swc/core': true # native binary required for the package to function — vitest's NestJS decorator-metadata transform (apps/api/vitest.config.ts)
   bcrypt: true # native binary required for the package to function — admin-auth password hashing (apps/api/src/admin-auth)
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@types/multer@2.3.0'

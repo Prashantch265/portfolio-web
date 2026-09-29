@@ -26,6 +26,7 @@ describe("env validation", () => {
     expect(result.CONTACT_RATE_LIMIT_PER_IP_HOUR).toBe(5);
     expect(result.CONTACT_RATE_LIMIT_PER_EMAIL_DAY).toBe(3);
     expect(result.ANALYTICS_RETENTION_DAYS).toBe(90);
+    expect(result.MEDIA_DIR).toBe("./media");
   });
 
   it("fails fast when a required key is missing (ANALYTICS_SALT)", () => {
