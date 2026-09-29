@@ -196,9 +196,12 @@ describe("Projects admin (e2e)", () => {
     const stillLive = await request(app.getHttpServer()).get(`/api/projects/${slug}`).expect(200);
     expect(stillLive.body.data.title).toBe("Draft title");
 
+    // "diagram" is deliberately still unwired (its own admin CRUD ships
+    // in a later M1d sub-slice) — "post" restore is real as of M1d/4,
+    // so it can't be used as the unsupported-type fixture anymore.
     const [unrelatedRevision] = await db
       .insert(schema.revisions)
-      .values({ entityType: "post", entityId: crypto.randomUUID(), snapshot: { title: "n/a" }, authorId: adminIds[adminIds.length - 1]! })
+      .values({ entityType: "diagram", entityId: crypto.randomUUID(), snapshot: { title: "n/a" }, authorId: adminIds[adminIds.length - 1]! })
       .returning();
     const notImplemented = await agent.post(`/api/admin/revisions/${unrelatedRevision!.id}/restore`);
     expect(notImplemented.status).toBe(501);
