@@ -5,11 +5,11 @@ import { Footer, Frame, GridGuides, Tag, TagList } from "@portfolio/ui";
 import { contentSource } from "../../../lib/content/index";
 import { PaletteHeader } from "../../_components/palette-header";
 
-export async function generateStaticParams() {
-  const projects = await contentSource.getProjects();
-  return projects.map((p) => ({ slug: p.slug }));
-}
-
+// No generateStaticParams — content is live now (F4), so build time has
+// no business enumerating slugs from a database that can change after
+// the build. Every slug renders on demand (root layout's
+// `dynamic = "force-dynamic"` covers this route too); an unknown one
+// still 404s via notFound() below, same as always.
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const project = await contentSource.getProject(slug);
