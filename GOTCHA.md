@@ -80,7 +80,9 @@ Unlike Project/Post, the `diagrams` table has no `status` enum. Whether a diagra
 
 ## Turborepo can race `typecheck` against `build` for the same Next.js package
 
-`apps/web`'s `typecheck` reads `.next/types/**/*.ts`, which `next build` generates mid-run. Turbo's default task graph doesn't guarantee `build` finishes before `typecheck` starts for the same package unless `turbo.json` declares that dependency — hit once as a `pnpm turbo run lint typecheck test build --force` failure (`TS6053: File '.next/types/app/.../page.ts' not found`) that vanished on an immediate re-run with no code change. If this recurs reliably (not just once), fix it properly with an explicit `dependsOn` in `turbo.json` rather than re-running past it each time.
+`apps/web`'s `typecheck` reads `.next/types/**/*.ts`, which `next build` generates mid-run. Turbo's default task graph doesn't guarantee `build` finishes before `typecheck` starts for the same package unless `turbo.json` declares that dependency — hit three separate times as a `pnpm turbo run lint typecheck test build --force` failure (`TS6053: File '.next/types/app/.../page.ts' not found`) that vanished on an immediate re-run with no code change, before it was fixed for real.
+
+**Fix:** `turbo.json`'s `typecheck` task now depends on `["^build", "build"]`, not just `["^build"]` — the extra plain `"build"` forces every package's own `build` to finish before its own `typecheck` starts, not just its dependencies'. No-op ordering constraint for packages whose typecheck doesn't touch build output (apps/api, packages/*), and closes the real race for apps/web.
 
 ## `file-type` v17+ dropped CJS support entirely
 
@@ -99,6 +101,12 @@ A response served with `Content-Type: image/svg+xml` (or any non-`text/*`, non-J
 `req.session.regenerate()`'s callback firing (and mutating `req.session.adminId`) doesn't mean the session has reached the store (Redis) yet — express-session normally persists it later, hooked into `res.end`, before the response actually flushes. That ordering held in practice for a long time, but surfaced once as a real CI flake: a request immediately following TOTP verification (the very next line in a test, or a fast subsequent real request) occasionally saw a 401, as if the session write hadn't landed yet.
 
 **Fix:** call `req.session.save((err) => ...)` explicitly inside the same regenerate callback, and resolve/reject based on IT, not on `regenerate()`'s own callback alone. Anywhere a handler mutates the session and something is likely to follow immediately (another request, a redirect, a test's next `await`), don't rely on the implicit end-of-response save — await the explicit one.
+
+## drizzle-kit's schema loader can't resolve a nested `.js`-suffixed import against its `.ts` source
+
+This codebase's convention is `.js`-suffixed relative imports everywhere (tsc/tsx/vitest all resolve them fine against `.ts` source under this app's CommonJS + classic module resolution). `drizzle-kit generate`'s own schema loader is the one exception: it special-cases the entry file (`drizzle.config.ts`'s `schema: "./src/db/schema/index.ts"`) but throws a plain `MODULE_NOT_FOUND` on any `.js`-suffixed relative import made FROM that entry file to another local `.ts` file (e.g. splitting `db/schema/index.ts` into a barrel that imports per-feature `*.schema.ts` files).
+
+**Fix:** the schema files' own local imports (barrel → per-feature schema files, and any schema file importing another for an FK, e.g. `revisions` → `admin-auth`'s `adminUsers`) omit the `.js` extension. Every other file in the app keeps the normal `.js`-suffixed convention — this is scoped narrowly to files `drizzle-kit generate` actually loads.
 
 ## Postgres unique violation → 409
 
