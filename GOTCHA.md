@@ -94,6 +94,12 @@ Unlike Project/Post, the `diagrams` table has no `status` enum. Whether a diagra
 
 A response served with `Content-Type: image/svg+xml` (or any non-`text/*`, non-JSON type) lands in `res.body` as a `Buffer`, not `res.text` — asserting on `.text` silently gives `undefined` rather than erroring at the content-type mismatch. When testing a route that serves raw bytes with a real image/binary Content-Type, read `res.body` and `Buffer.from(res.body).toString(...)` if you need it as text, never assume `.text` is populated just because the byte content happens to be textual (SVG is XML text, but the content-type is what superagent keys off, not the actual bytes).
 
+## express-session's implicit save-on-`res.end` isn't a guarantee to code against
+
+`req.session.regenerate()`'s callback firing (and mutating `req.session.adminId`) doesn't mean the session has reached the store (Redis) yet — express-session normally persists it later, hooked into `res.end`, before the response actually flushes. That ordering held in practice for a long time, but surfaced once as a real CI flake: a request immediately following TOTP verification (the very next line in a test, or a fast subsequent real request) occasionally saw a 401, as if the session write hadn't landed yet.
+
+**Fix:** call `req.session.save((err) => ...)` explicitly inside the same regenerate callback, and resolve/reject based on IT, not on `regenerate()`'s own callback alone. Anywhere a handler mutates the session and something is likely to follow immediately (another request, a redirect, a test's next `await`), don't rely on the implicit end-of-response save — await the explicit one.
+
 ## Postgres unique violation → 409
 
 Use `common/db/is-unique-violation.ts` (`err.code === "23505"`) to map DB unique-constraint violations to `ConflictException`. Don't duplicate this check per-service (was duplicated in `tags.service.ts` and `pages.service.ts` before being extracted).

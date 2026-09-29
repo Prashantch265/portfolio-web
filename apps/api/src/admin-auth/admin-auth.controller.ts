@@ -34,11 +34,20 @@ export class AdminAuthController {
     // session-fixation guard. Anything an attacker got a victim to
     // carry into this request (a pre-set, attacker-known session id)
     // is discarded here rather than being upgraded to an authenticated one.
+    //
+    // Explicit save(), not left to express-session's implicit
+    // save-on-res.end: a rare CI flake (a follow-up request racing
+    // ahead of the session actually reaching Redis, seen as a spurious
+    // 401 on the very next request) traced back to relying on that
+    // implicit timing — see GOTCHA.md.
     await new Promise<void>((resolve, reject) => {
       req.session.regenerate((err) => {
         if (err) return reject(err instanceof Error ? err : new Error(String(err)));
         req.session.adminId = adminId;
-        resolve();
+        req.session.save((saveErr) => {
+          if (saveErr) return reject(saveErr instanceof Error ? saveErr : new Error(String(saveErr)));
+          resolve();
+        });
       });
     });
 
