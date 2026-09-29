@@ -20,6 +20,16 @@ const plexMono = localFont({
   variable: "--font-mono",
 });
 
+// Content is now live and admin-editable (F4 — apiContentSource calls
+// the real backend), not frozen at build time — static generation would
+// silently freeze a newly-published project/post until the next
+// rebuild, defeating the whole point of the admin CRUD + publish flow.
+// Applies to every route (segment config inherits down from the root
+// layout); individual fetches still cache for a short window via their
+// own `next: { revalidate }` option, so this is "render fresh HTML per
+// request," not "never cache the underlying data."
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Prashant Chaudhary — Backend & AI platform engineer",
   description:
