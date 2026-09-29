@@ -6,7 +6,7 @@
 // the database until a real CMS editor exists. Idempotent: every insert
 // upserts by natural key (slug, or a (parent, kind) pair), so re-running
 // this script never creates duplicates.
-import type { DiagramDoc } from "@portfolio/types";
+import { buildTextEquivalent } from "@portfolio/types";
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { eq } from "drizzle-orm";
@@ -18,47 +18,6 @@ import * as schema from "./schema/index.js";
 // script can read the same real, typed data without either duplicating
 // it or reaching across an app boundary.
 import { cv, posts, projects } from "@portfolio/content";
-
-/**
- * Duplicates packages/diagram's buildTextEquivalent (packages/diagram/
- * src/lib/text-equivalent.ts) on purpose: that package depends on React
- * and is meant for the frontend renderer, and pulling it into a NestJS
- * backend just for one pure data-transform function isn't worth a
- * dependency edge from apps/api onto a UI package. Real risk of drift
- * only starts once M1d's diagram admin-editor endpoint can produce
- * diagrams this copy never sees — reconcile into a shared,
- * framework-free location (e.g. packages/types) at that point, not now.
- */
-const NODE_TYPE_LABEL: Record<DiagramDoc["nodes"][number]["type"], string> = {
-  service: "Service",
-  datastore: "Datastore",
-  queue: "Workflow / queue",
-  external: "External",
-  client: "Client",
-};
-
-const EDGE_VERB: Record<DiagramDoc["edges"][number]["type"], string> = {
-  sync: "calls",
-  async: "sends an asynchronous event to",
-  "data-read": "reads data from",
-  "data-write": "reads and writes data to",
-  auth: "checks authorization against",
-};
-
-function buildTextEquivalent(diagram: DiagramDoc) {
-  const nodeLines = diagram.nodes.map((n) => {
-    const parts = [`${NODE_TYPE_LABEL[n.type]}.`, n.annotation.role];
-    if (n.annotation.reasoning) parts.push(n.annotation.reasoning);
-    return { label: n.label, text: parts.join(" ") };
-  });
-  const edgeLines = diagram.edges.map((e) => {
-    const from = diagram.nodes.find((n) => n.id === e.from);
-    const to = diagram.nodes.find((n) => n.id === e.to);
-    const verb = EDGE_VERB[e.type] ?? "connects to";
-    return `${from?.label} ${verb} ${to?.label}.`;
-  });
-  return { nodeLines, edgeLines };
-}
 
 async function main() {
   const connectionString = process.env.DATABASE_URL;

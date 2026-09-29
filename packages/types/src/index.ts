@@ -1,6 +1,7 @@
 export * from "./health.js";
 export * from "./env.js";
 export * from "./diagram.js";
+export * from "./text-equivalent.js";
 export * from "./project.js";
 export * from "./post.js";
 export * from "./page.js";

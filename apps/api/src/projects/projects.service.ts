@@ -10,8 +10,8 @@ import { CacheService } from "../common/cache/cache.service.js";
 import { RevisionsService } from "../revisions/revisions.service.js";
 import type { UpsertProjectDto } from "./dto/upsert-project.dto.js";
 import { caseStudySectionBodySchemas, isCaseStudySectionKind, type CaseStudySectionKind } from "./case-study-section-body.schema.js";
+import { PROJECTS_CACHE_KEY_ALL as CACHE_KEY_ALL } from "./projects-cache-keys.js";
 
-const CACHE_KEY_ALL = "content:projects:all";
 const CACHE_TTL_SECONDS = 60;
 
 type ProjectRow = typeof schema.projects.$inferSelect;
