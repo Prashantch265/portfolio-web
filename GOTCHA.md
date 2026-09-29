@@ -70,6 +70,18 @@ Hit in `revisions.e2e.spec.ts`'s fixture (three rows, one insert, `createdAt` al
 
 **Fix:** when a test needs deterministic ordering by a `defaultNow()` column, set `createdAt` explicitly per row, spread apart (e.g. `base`, `base + 1000ms`, ...) — don't rely on real insert timing or on splitting into separate statements (still theoretically tieable within one clock tick). Real production code isn't affected here — `RevisionsService.record()` writes exactly one row per transaction, never several at once.
 
+## Diagram's draft/publish gate is `publishedVersion === null`, not a `status` column
+
+Unlike Project/Post, the `diagrams` table has no `status` enum. Whether a diagram is "still draft" (direct writes) vs. "published" (writes stage into `draftData`) is `row.publishedVersion === null` vs. not — `publishedVersion` doubles as both the publish gate and the record of which `version` number last went live. `version` itself increments on EVERY save (draft or staged), including `publish()`'s own snapshot-write revision, but `publish()` does NOT increment `version` — it only copies `draftData` onto the live columns and sets `publishedVersion := version`. Don't add a `status` column here to "make it consistent" with Project/Post — the PRD's own schema comment specifies this exact mechanism.
+
+## A framework-free pure function shared by frontend + backend belongs in `packages/types`, not the UI package
+
+`buildTextEquivalent` (diagram → accessible text) was needed by both `packages/diagram` (React, frontend renderer) and `apps/api` (admin diagram writes, server-computed `textEquivalent` — never client-supplied, so admin and public reads can't disagree). `apps/api/src/db/seed.ts` initially carried its own duplicate specifically to avoid a backend→UI-package dependency edge, with a comment flagging that the second real consumer (the diagram admin-editor endpoint) was the actual trigger to reconcile it. When that endpoint shipped, the fix was: move the authoritative implementation into `packages/types` (already a dependency of both sides, zero framework deps), and make `packages/diagram`'s own file a one-line re-export so its existing internal imports (`NODE_TYPE_LABEL`, `EDGE_VERB`, not just `buildTextEquivalent`) kept working unchanged.
+
+## Turborepo can race `typecheck` against `build` for the same Next.js package
+
+`apps/web`'s `typecheck` reads `.next/types/**/*.ts`, which `next build` generates mid-run. Turbo's default task graph doesn't guarantee `build` finishes before `typecheck` starts for the same package unless `turbo.json` declares that dependency — hit once as a `pnpm turbo run lint typecheck test build --force` failure (`TS6053: File '.next/types/app/.../page.ts' not found`) that vanished on an immediate re-run with no code change. If this recurs reliably (not just once), fix it properly with an explicit `dependsOn` in `turbo.json` rather than re-running past it each time.
+
 ## Postgres unique violation → 409
 
 Use `common/db/is-unique-violation.ts` (`err.code === "23505"`) to map DB unique-constraint violations to `ConflictException`. Don't duplicate this check per-service (was duplicated in `tags.service.ts` and `pages.service.ts` before being extracted).
