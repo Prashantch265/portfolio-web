@@ -82,6 +82,18 @@ Unlike Project/Post, the `diagrams` table has no `status` enum. Whether a diagra
 
 `apps/web`'s `typecheck` reads `.next/types/**/*.ts`, which `next build` generates mid-run. Turbo's default task graph doesn't guarantee `build` finishes before `typecheck` starts for the same package unless `turbo.json` declares that dependency — hit once as a `pnpm turbo run lint typecheck test build --force` failure (`TS6053: File '.next/types/app/.../page.ts' not found`) that vanished on an immediate re-run with no code change. If this recurs reliably (not just once), fix it properly with an explicit `dependsOn` in `turbo.json` rather than re-running past it each time.
 
+## `file-type` v17+ dropped CJS support entirely
+
+`file-type`'s modern API (`fileTypeFromBuffer`, etc.) only ships as ESM. A CommonJS-compiled NestJS app (`packages/config`'s `nest.json` tsconfig preset sets `module: "CommonJS"`) can't `require()` it directly. The package still publishes a `"version-16"` dist-tag (`16.5.4`) with the old CJS-compatible API (`fromBuffer`, not `fileTypeFromBuffer`) — pin to that exact version rather than fighting dynamic `import()` from a CJS file for a one-off sniff call. Also worth knowing: `file-type` cannot detect SVG at all (no binary magic-number signature for a text/XML format) — needs its own separate textual sniff (`<svg` root element check).
+
+## Multer's own errors aren't `HttpException`s
+
+`FileInterceptor`'s `limits.fileSize` cap throws a `MulterError` (e.g. `code: "LIMIT_FILE_SIZE"`) when exceeded — a plain `Error` subclass from the `multer` package, not a NestJS `HttpException`. A global `@Catch()` filter that only branches on `CustomHttpException`/`HttpException` falls through to a generic 500 for this, hiding a client-actionable "you exceeded the size cap" behind an opaque internal error. Add an explicit `instanceof MulterError` branch mapping `LIMIT_FILE_SIZE` → 413 (and other codes → 400) in the shared exception filter — a one-time fix, not per-upload-route handling.
+
+## superagent (supertest) only populates `.text` for content-types it recognizes as text
+
+A response served with `Content-Type: image/svg+xml` (or any non-`text/*`, non-JSON type) lands in `res.body` as a `Buffer`, not `res.text` — asserting on `.text` silently gives `undefined` rather than erroring at the content-type mismatch. When testing a route that serves raw bytes with a real image/binary Content-Type, read `res.body` and `Buffer.from(res.body).toString(...)` if you need it as text, never assume `.text` is populated just because the byte content happens to be textual (SVG is XML text, but the content-type is what superagent keys off, not the actual bytes).
+
 ## Postgres unique violation → 409
 
 Use `common/db/is-unique-violation.ts` (`err.code === "23505"`) to map DB unique-constraint violations to `ConflictException`. Don't duplicate this check per-service (was duplicated in `tags.service.ts` and `pages.service.ts` before being extracted).

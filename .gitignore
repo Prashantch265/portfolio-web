@@ -19,3 +19,6 @@ docs/.private/
 .next/
 dist/
 *.tsbuildinfo
+
+# uploaded media — local-disk store (MEDIA_DIR), never committed
+apps/api/media/

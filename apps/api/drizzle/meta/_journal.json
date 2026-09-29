@@ -29,6 +29,13 @@
       "when": 1790610764368,
       "tag": "0003_material_lethal_legion",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790668223448,
+      "tag": "0004_black_major_mapleleaf",
+      "breakpoints": true
     }
   ]
 }

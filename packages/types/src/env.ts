@@ -31,6 +31,14 @@ export const envSchema = z.object({
   CONTACT_RATE_LIMIT_PER_IP_HOUR: z.coerce.number().int().positive().default(5),
   CONTACT_RATE_LIMIT_PER_EMAIL_DAY: z.coerce.number().int().positive().default(3),
   ANALYTICS_RETENTION_DAYS: z.coerce.number().int().positive().default(90),
+
+  // §6.4/§2: local-volume media store. Default resolves relative to the
+  // process cwd — "/app" in the api container (Dockerfile's WORKDIR),
+  // where docker-compose.yml already mounts the `media` volume at
+  // exactly `/app/media`; locally it lands under apps/api/media
+  // (gitignored). Also not in the original §16 table, same as
+  // ANALYTICS_SALT above.
+  MEDIA_DIR: z.string().min(1).default("./media"),
 });
 
 export type Env = z.infer<typeof envSchema>;
