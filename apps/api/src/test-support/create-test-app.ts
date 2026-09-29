@@ -4,7 +4,7 @@ import { AppModule } from "../app.module.js";
 import { AllExceptionsFilter } from "../common/filters/http-exception.filter.js";
 import { requestIdMiddleware } from "../common/middleware/request-id.middleware.js";
 import { REDIS_CLIENT } from "../redis/redis.tokens.js";
-import { createSessionMiddleware } from "../admin-auth/session-middleware.js";
+import { createSessionMiddleware } from "../modules/admin-auth/session-middleware.js";
 
 /**
  * Mirrors main.ts's bootstrap exactly (global prefix, request-id
