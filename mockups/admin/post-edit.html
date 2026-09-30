@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Edit post — Admin</title>
+  <link rel="stylesheet" href="assets/tokens.css?v=1" />
+  <link rel="stylesheet" href="assets/admin.css?v=1" />
+</head>
+<body>
+  <div class="admin-gate-notice" data-admin-gate-notice>Loading admin…</div>
+  <div class="admin-shell" data-admin-shell hidden>
+    <div class="admin-topbar" data-admin-topbar></div>
+    <aside class="admin-sidebar" data-admin-sidebar></aside>
+    <main class="admin-main" data-admin-main>
+      <div class="editor-toolbar">
+        <div class="editor-toolbar__title">
+          <span data-post-title>Loading…</span>
+          <span data-status-pill></span>
+          <span data-dirty-badge></span>
+        </div>
+        <div class="editor-toolbar__actions">
+          <button type="button" class="btn" data-save>Save draft</button>
+          <button type="button" class="btn btn--primary" data-publish>Publish</button>
+          <button type="button" class="btn btn--danger" data-delete>Delete</button>
+        </div>
+      </div>
+
+      <form data-post-form>
+        <div class="section-block" id="core-fields"></div>
+      </form>
+
+      <div class="section-block">
+        <h2>Revision history</h2>
+        <div data-revisions></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/diagram.js?v=1"></script>
+  <script src="assets/seed-content.js?v=1"></script>
+  <script src="assets/seed.js?v=1"></script>
+  <script src="assets/db.js?v=1"></script>
+  <script src="assets/api.js?v=1"></script>
+  <script src="assets/routes.js?v=1"></script>
+  <script src="assets/ui.js?v=1"></script>
+  <script src="assets/app.js?v=1"></script>
+  <script src="assets/devtools.js?v=1"></script>
+  <script>
+    (function () {
+      "use strict";
+      var UI = window.AdminUI, Api = window.Api;
+      window.AdminApp.mountShell("posts", "Edit post");
+      var id = new URLSearchParams(location.search).get("id");
+      var form = UI.qs("[data-post-form]");
+
+      function load() {
+        Api.send("GET", "/api/admin/posts/" + id).then(function (env) {
+          var row = UI.adaptRow(env.data);
+          UI.qs("[data-post-title]").textContent = row.title;
+          UI.qs("[data-status-pill]").innerHTML = UI.statusPillHtml(row.status);
+          UI.qs("[data-dirty-badge]").innerHTML = UI.dirtyBadgeHtml(row._hasPendingDraft);
+          document.title = row.title + " — Admin";
+          UI.qs("#core-fields").innerHTML =
+            UI.field({ name: "title", label: "Title", value: row.title }) +
+            UI.field({ name: "slug", label: "Slug", value: row.slug }) +
+            UI.field({ name: "summary", label: "Summary", value: row.summary, textarea: true, rows: 2 }) +
+            UI.field({ name: "body", label: "Body", value: row.body, textarea: true, rows: 8 }) +
+            UI.field({ name: "date", label: "Date", type: "date", value: row.date }) +
+            UI.field({ name: "readingMinutes", label: "Reading minutes", type: "number", value: row.readingMinutes }) +
+            UI.field({ name: "tags", label: "Tags (comma-separated)", value: (row.tags || []).join(", ") });
+        });
+        loadRevisions();
+      }
+
+      function loadRevisions() {
+        Api.send("GET", "/api/admin/revisions?entityType=post&entityId=" + id).then(function (env) {
+          var el = UI.qs("[data-revisions]");
+          el.innerHTML = env.data.length
+            ? env.data.map(function (r) {
+                return '<div class="revision-row"><span class="revision-row__meta">' + UI.formatDate(r.createdAt) + " · " + r.authorId + '</span><button type="button" class="btn btn--small" data-restore="' + r.id + '">Restore</button></div>';
+              }).join("")
+            : '<p class="text-small" style="color:var(--ink-muted);">No history yet.</p>';
+          UI.qsa("[data-restore]", el).forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              Api.send("POST", "/api/admin/revisions/" + btn.dataset.restore + "/restore").then(function (env2) {
+                UI.toast(env2.message, "success");
+                load();
+              });
+            });
+          });
+        });
+      }
+
+      UI.qs("[data-save]").addEventListener("click", function () {
+        UI.clearFieldErrors(form);
+        var patch = UI.readForm(form, ["title", "slug", "summary", "body", "date", "readingMinutes", "tags"]);
+        patch.readingMinutes = Number(patch.readingMinutes);
+        patch.tags = patch.tags.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+        Api.send("PUT", "/api/admin/posts/" + id, function () { return patch; }).then(
+          function () { UI.toast("Saved as draft.", "success"); load(); },
+          function (err) { UI.applyFieldErrors(form, err); UI.toast(err.message, "error"); }
+        );
+      });
+
+      UI.qs("[data-publish]").addEventListener("click", function () {
+        Api.send("POST", "/api/admin/posts/" + id + "/publish").then(
+          function () { UI.toast("Published.", "success"); load(); },
+          function (err) { UI.clearFieldErrors(form); UI.applyFieldErrors(form, err); UI.toast(err.message, "error"); }
+        );
+      });
+
+      UI.qs("[data-delete]").addEventListener("click", function () {
+        UI.confirmDialog({ title: "Delete this post?", message: "There is no unpublish endpoint — deleting is the only way to remove it from public view.", danger: true, confirmLabel: "Delete" }).then(function (yes) {
+          if (yes) Api.send("DELETE", "/api/admin/posts/" + id).then(function () { location.href = "posts.html"; });
+        });
+      });
+
+      Api.me().then(load);
+    })();
+  </script>
+</body>
+</html>

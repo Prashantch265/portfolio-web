@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Edit diagram — Admin</title>
+  <link rel="stylesheet" href="assets/tokens.css?v=1" />
+  <link rel="stylesheet" href="assets/admin.css?v=1" />
+  <link rel="stylesheet" href="assets/diagram.css?v=1" />
+</head>
+<body>
+  <div class="admin-gate-notice" data-admin-gate-notice>Loading admin…</div>
+  <div class="admin-shell" data-admin-shell hidden>
+    <div class="admin-topbar" data-admin-topbar></div>
+    <aside class="admin-sidebar" data-admin-sidebar></aside>
+    <main class="admin-main" data-admin-main>
+      <div class="editor-toolbar">
+        <div class="editor-toolbar__title">
+          <span data-diagram-owner>Loading…</span>
+          <span data-status-pill></span>
+          <span data-dirty-badge></span>
+        </div>
+        <div class="editor-toolbar__actions">
+          <a class="btn" data-back-link href="projects.html">← Back to project</a>
+          <button type="button" class="btn" data-save>Save draft</button>
+          <button type="button" class="btn btn--primary" data-publish>Publish</button>
+        </div>
+      </div>
+
+      <div class="split-pane" data-diagram-editor>
+        <div class="split-pane__editor">
+          <h3>Nodes</h3>
+          <div id="nodes-list"></div>
+          <h3 style="margin-top:var(--space-4);">Edges</h3>
+          <div id="edges-list"></div>
+          <h3 style="margin-top:var(--space-4);">Groups <span class="text-small" style="color:var(--ink-muted);font-weight:400;">— optional, rarely used</span></h3>
+          <div id="groups-list"></div>
+        </div>
+
+        <div class="split-pane__preview">
+          <div class="split-pane__preview-head">
+            <strong>Live preview</strong>
+            <span class="text-small" style="color:var(--ink-muted);">Real renderer — same component the public site uses</span>
+          </div>
+          <div data-validation-banner></div>
+          <div class="diagram-frame">
+            <div class="diagram-frame__body">
+              <div class="diagram-canvas-wrap" data-diagram-canvas></div>
+              <div class="bp-annotation" data-diagram-panel></div>
+            </div>
+          </div>
+          <h3 style="margin-top:var(--space-4);">Text equivalent <span class="text-small" style="color:var(--ink-muted);font-weight:400;">— read-only, server-computed (§2)</span></h3>
+          <div data-text-equivalent style="font-size:0.8rem;color:var(--ink-muted);"></div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <h2>Revision history</h2>
+        <div data-revisions></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/diagram.js?v=1"></script>
+  <script src="assets/seed-content.js?v=1"></script>
+  <script src="assets/seed.js?v=1"></script>
+  <script src="assets/db.js?v=1"></script>
+  <script src="assets/api.js?v=1"></script>
+  <script src="assets/routes.js?v=1"></script>
+  <script src="assets/ui.js?v=1"></script>
+  <script src="assets/app.js?v=1"></script>
+  <script src="assets/devtools.js?v=1"></script>
+  <script>
+    (function () {
+      "use strict";
+      var UI = window.AdminUI, Api = window.Api;
+      window.AdminApp.mountShell("projects", "Edit diagram");
+
+      var projectId = new URLSearchParams(location.search).get("project");
+      UI.qs("[data-back-link]").href = "project-edit.html?id=" + projectId;
+
+      var diagramId = null;
+      var nodesList, edgesList, groupsList;
+      var mounted = null; // {update, destroy} from BlueprintDiagram.mount
+      var TYPE_OPTIONS = ["client", "service", "datastore", "queue", "external"].map(function (t) { return { value: t, label: t }; });
+      var EDGE_TYPE_OPTIONS = ["sync", "async", "data-read", "data-write", "auth"].map(function (t) { return { value: t, label: t }; });
+
+      function nodeRowHtml(n) {
+        n.annotation = n.annotation || { role: "", reasoning: "", alternative: "" };
+        return (
+          '<input data-rfield="id" type="text" placeholder="id" value="' + UI.escapeHtml(n.id) + '" />' +
+          '<input data-rfield="label" type="text" placeholder="Label" value="' + UI.escapeHtml(n.label) + '" />' +
+          '<select data-rfield="type">' + TYPE_OPTIONS.map(function (o) { return '<option value="' + o.value + '"' + (o.value === n.type ? " selected" : "") + ">" + o.label + "</option>"; }).join("") + "</select>" +
+          '<input data-rfield="col" type="number" placeholder="col" value="' + n.col + '" />' +
+          '<input data-rfield="row" type="number" placeholder="row" value="' + n.row + '" />' +
+          '<textarea data-rfield="role" placeholder="Role" rows="1" style="grid-column:1/-1;">' + UI.escapeHtml(n.annotation.role) + "</textarea>" +
+          '<textarea data-rfield="reasoning" placeholder="Reasoning (optional)" rows="1" style="grid-column:1/-1;">' + UI.escapeHtml(n.annotation.reasoning || "") + "</textarea>" +
+          '<textarea data-rfield="alternative" placeholder="Alternative considered (optional)" rows="1" style="grid-column:1/-1;">' + UI.escapeHtml(n.annotation.alternative || "") + "</textarea>"
+        );
+      }
+
+      function edgeRowHtml(e) {
+        return (
+          '<input data-rfield="id" type="text" placeholder="id" value="' + UI.escapeHtml(e.id) + '" />' +
+          '<input data-rfield="from" type="text" placeholder="from (node id)" value="' + UI.escapeHtml(e.from) + '" />' +
+          '<input data-rfield="to" type="text" placeholder="to (node id)" value="' + UI.escapeHtml(e.to) + '" />' +
+          '<select data-rfield="type">' + EDGE_TYPE_OPTIONS.map(function (o) { return '<option value="' + o.value + '"' + (o.value === e.type ? " selected" : "") + ">" + o.label + "</option>"; }).join("") + "</select>" +
+          '<input data-rfield="label" type="text" placeholder="Label (optional)" value="' + UI.escapeHtml(e.label || "") + '" />'
+        );
+      }
+
+      function groupRowHtml(g) {
+        return (
+          '<input data-rfield="id" type="text" placeholder="id" value="' + UI.escapeHtml(g.id) + '" />' +
+          '<input data-rfield="label" type="text" placeholder="Label" value="' + UI.escapeHtml(g.label) + '" />' +
+          '<input data-rfield="nodeIds" type="text" placeholder="node ids, comma-separated" value="' + UI.escapeHtml((g.nodeIds || []).join(",")) + '" />'
+        );
+      }
+
+      function collectNodes() {
+        return nodesList.getValues().map(function (n) {
+          return {
+            id: n.id, label: n.label, type: n.type, col: Number(n.col) || 0, row: Number(n.row) || 0,
+            annotation: { role: n.role, reasoning: n.reasoning || null, alternative: n.alternative || null }
+          };
+        });
+      }
+      function collectEdges() {
+        return edgesList.getValues().map(function (e) {
+          return { id: e.id, from: e.from, to: e.to, type: e.type, label: e.label || undefined };
+        });
+      }
+      function collectGroups() {
+        return groupsList.getValues().map(function (g) {
+          return { id: g.id, label: g.label, nodeIds: g.nodeIds.split(",").map(function (s) { return s.trim(); }).filter(Boolean) };
+        });
+      }
+
+      function renderPreview() {
+        var nodes = collectNodes(), edges = collectEdges();
+        var errors = window.AdminValidate.diagram(nodes, edges);
+        var banner = UI.qs("[data-validation-banner]");
+        var editorRoot = UI.qs("[data-diagram-editor]");
+        // clear previous inline row errors before re-marking
+        UI.qsa(".field__error.js-diagram-error", editorRoot).forEach(function (n) { n.remove(); });
+        UI.qsa('[data-rfield]', editorRoot).forEach(function (el) { el.style.borderColor = ""; });
+
+        if (errors) {
+          banner.innerHTML = '<div class="form-banner">Diagram has validation errors — the preview below shows the last valid version.</div>';
+          Object.keys(errors).forEach(function (path) {
+            // path looks like "edges.0.to"
+            var parts = path.split(".");
+            var idx = Number(parts[1]);
+            var key = parts[2];
+            var row = UI.qsa(".rlist__row", UI.qs("#edges-list"))[idx];
+            if (row) {
+              var el = UI.qs('[data-rfield="' + key + '"]', row);
+              if (el) el.style.borderColor = "var(--danger)";
+              var note = document.createElement("div");
+              note.className = "field__error js-diagram-error";
+              note.textContent = errors[path].join(" ");
+              row.appendChild(note);
+            }
+          });
+          return; // keep last good frame — don't call update() with broken data
+        }
+
+        banner.innerHTML = "";
+        var data = { nodes: nodes, edges: edges };
+        if (!mounted) {
+          mounted = window.BlueprintDiagram.mount(UI.qs("[data-diagram-canvas]").closest(".diagram-frame"), data);
+        } else {
+          mounted.update(data);
+        }
+        var eq = window.BlueprintDiagram.buildTextEquivalent(data);
+        var html = "<ol>" + eq.nodeLines.map(function (n) { return "<li><strong>" + UI.escapeHtml(n.label) + "</strong> — " + UI.escapeHtml(n.text) + "</li>"; }).join("") + "</ol>";
+        html += "<p class='label' style='margin:8px 0;'>Connections</p><ol>" + eq.edgeLines.map(function (l) { return "<li>" + UI.escapeHtml(l) + "</li>"; }).join("") + "</ol>";
+        UI.qs("[data-text-equivalent]").innerHTML = html;
+      }
+
+      var debouncedRender = UI.debounce(renderPreview, 120);
+
+      function load() {
+        Api.send("GET", "/api/admin/diagrams?ownerId=" + projectId).then(function (env) {
+          var row = UI.adaptRow(env.data);
+          diagramId = row.id;
+          UI.qs("[data-diagram-owner]").textContent = "Diagram — " + row.ownerId;
+          UI.qs("[data-status-pill]").innerHTML = UI.statusPillHtml(row.status);
+          UI.qs("[data-dirty-badge]").innerHTML = UI.dirtyBadgeHtml(row._hasPendingDraft);
+
+          nodesList = UI.repeatableList(UI.qs("#nodes-list"), row.nodes, nodeRowHtml, { blank: function () { return { id: "", label: "", type: "service", col: 0, row: 0, annotation: {} }; }, addLabel: "+ Add node" });
+          edgesList = UI.repeatableList(UI.qs("#edges-list"), row.edges, edgeRowHtml, { blank: function () { return { id: "", from: "", to: "", type: "sync", label: "" }; }, addLabel: "+ Add edge" });
+          groupsList = UI.repeatableList(UI.qs("#groups-list"), row.groups || [], groupRowHtml, { blank: function () { return { id: "", label: "", nodeIds: [] }; }, addLabel: "+ Add group" });
+
+          UI.qs("[data-diagram-editor]").addEventListener("input", debouncedRender);
+          UI.qs("[data-diagram-editor]").addEventListener("click", function (e) {
+            if (e.target.closest(".rlist__row-remove, .rlist__add")) debouncedRender();
+          });
+
+          renderPreview();
+          loadRevisions();
+        });
+      }
+
+      function loadRevisions() {
+        Api.send("GET", "/api/admin/revisions?entityType=diagram&entityId=" + diagramId).then(function (env) {
+          var el = UI.qs("[data-revisions]");
+          el.innerHTML = env.data.length
+            ? env.data.map(function (r) {
+                return '<div class="revision-row"><span class="revision-row__meta">' + UI.formatDate(r.createdAt) + " · " + r.authorId + '</span><button type="button" class="btn btn--small" data-restore="' + r.id + '">Restore</button></div>';
+              }).join("")
+            : '<p class="text-small" style="color:var(--ink-muted);">No history yet.</p>';
+          UI.qsa("[data-restore]", el).forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              Api.send("POST", "/api/admin/revisions/" + btn.dataset.restore + "/restore").then(function (env2) {
+                UI.toast(env2.message, "success");
+                load();
+              });
+            });
+          });
+        });
+      }
+
+      UI.qs("[data-save]").addEventListener("click", function () {
+        var nodes = collectNodes(), edges = collectEdges(), groups = collectGroups();
+        Api.send("PUT", "/api/admin/diagrams/" + diagramId, function () { return { nodes: nodes, edges: edges, groups: groups }; }).then(
+          function () { UI.toast("Saved as draft.", "success"); load(); },
+          function (err) { UI.toast(err.message, "error"); renderPreview(); }
+        );
+      });
+
+      UI.qs("[data-publish]").addEventListener("click", function () {
+        Api.send("POST", "/api/admin/diagrams/" + diagramId + "/publish").then(
+          function () { UI.toast("Published.", "success"); load(); },
+          function (err) { UI.toast(err.message, "error"); }
+        );
+      });
+
+      Api.me().then(load);
+    })();
+  </script>
+</body>
+</html>

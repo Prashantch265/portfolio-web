@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Projects — Admin</title>
+  <link rel="stylesheet" href="assets/tokens.css?v=1" />
+  <link rel="stylesheet" href="assets/admin.css?v=1" />
+</head>
+<body>
+  <div class="admin-gate-notice" data-admin-gate-notice>Loading admin…</div>
+  <div class="admin-shell" data-admin-shell hidden>
+    <div class="admin-topbar" data-admin-topbar></div>
+    <aside class="admin-sidebar" data-admin-sidebar></aside>
+    <main class="admin-main" data-admin-main>
+      <div class="admin-page-head">
+        <h1>Projects</h1>
+        <span class="admin-page-head__meta">Case studies — the largest content type</span>
+      </div>
+      <div data-table-root></div>
+    </main>
+  </div>
+
+  <script src="assets/diagram.js?v=1"></script>
+  <script src="assets/seed-content.js?v=1"></script>
+  <script src="assets/seed.js?v=1"></script>
+  <script src="assets/db.js?v=1"></script>
+  <script src="assets/api.js?v=1"></script>
+  <script src="assets/routes.js?v=1"></script>
+  <script src="assets/ui.js?v=1"></script>
+  <script src="assets/app.js?v=1"></script>
+  <script src="assets/devtools.js?v=1"></script>
+  <script>
+    (function () {
+      "use strict";
+      var UI = window.AdminUI, Api = window.Api;
+      window.AdminApp.mountShell("projects", "Projects");
+
+      Api.me().then(function () {
+        Api.send("GET", "/api/admin/projects").then(function (env) {
+          var rows = env.data.map(UI.adaptRow);
+          UI.dataTable(UI.qs("[data-table-root]"), {
+            columns: [
+              { key: "title", label: "Title" },
+              { key: "slug", label: "Slug" },
+              { key: "status", label: "Status", render: function (r) { return UI.statusPillHtml(r.status) + " " + UI.dirtyBadgeHtml(r._hasPendingDraft); } },
+              { key: "featured", label: "Featured", render: function (r) { return r.featured ? "Yes" : "—"; } },
+              { key: "order", label: "Order" },
+              { key: "updatedAt", label: "Updated", render: function (r) { return UI.formatDate(r.updatedAt); } }
+            ],
+            rows: rows,
+            filterFn: function (row, q) { return (row.title + " " + row.slug).toLowerCase().indexOf(q) !== -1; },
+            filterPlaceholder: "Filter projects…",
+            onRowClick: function (row) { location.href = "project-edit.html?id=" + row.id; },
+            emptyMessage: "No projects match."
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

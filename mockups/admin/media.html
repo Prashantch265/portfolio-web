@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Media — Admin</title>
+  <link rel="stylesheet" href="assets/tokens.css?v=1" />
+  <link rel="stylesheet" href="assets/admin.css?v=1" />
+</head>
+<body>
+  <div class="admin-gate-notice" data-admin-gate-notice>Loading admin…</div>
+  <div class="admin-shell" data-admin-shell hidden>
+    <div class="admin-topbar" data-admin-topbar></div>
+    <aside class="admin-sidebar" data-admin-sidebar></aside>
+    <main class="admin-main" data-admin-main>
+      <div class="admin-page-head">
+        <h1>Media</h1>
+        <span class="admin-page-head__meta">Upload / browse / copy URL / delete only — §12, no consumers yet</span>
+      </div>
+
+      <div class="form-notice">
+        Thumbnails don't survive a page reload here — object bytes are never written to
+        localStorage (a real upload's ~5MB quota would silently corrupt everything else in
+        this mockup). Only the file's metadata persists. This is stated deliberately in
+        <a href="notes.html">design notes</a>, not a bug.
+      </div>
+
+      <div class="dropzone" data-dropzone tabindex="0" role="button" aria-label="Upload a file">
+        <p><strong>Drop a file here</strong>, or click to browse.</p>
+        <p class="text-small" style="margin-top:4px;">PNG, JPEG, WebP, or SVG. 8 MiB max. Type is sniffed from the file's actual bytes.</p>
+        <input type="file" data-file-input hidden accept=".png,.jpg,.jpeg,.webp,.svg" />
+      </div>
+
+      <div class="media-grid" data-media-grid></div>
+    </main>
+  </div>
+
+  <script src="assets/diagram.js?v=1"></script>
+  <script src="assets/seed-content.js?v=1"></script>
+  <script src="assets/seed.js?v=1"></script>
+  <script src="assets/db.js?v=1"></script>
+  <script src="assets/api.js?v=1"></script>
+  <script src="assets/routes.js?v=1"></script>
+  <script src="assets/ui.js?v=1"></script>
+  <script src="assets/app.js?v=1"></script>
+  <script src="assets/devtools.js?v=1"></script>
+  <script>
+    (function () {
+      "use strict";
+      var UI = window.AdminUI, Api = window.Api;
+      window.AdminApp.mountShell("media", "Media");
+
+      var dropzone = UI.qs("[data-dropzone]");
+      var fileInput = UI.qs("[data-file-input]");
+      var MAX_BYTES = 8 * 1024 * 1024;
+
+      function bytesToHex(bytes) {
+        return Array.prototype.map.call(bytes, function (b) { return b.toString(16).padStart(2, "0"); }).join(" ");
+      }
+
+      // §12: "detected from the file's actual bytes, not filename or
+      // declared content-type" — real magic-number sniffing, not a
+      // filename-extension check.
+      function sniff(file) {
+        return file.slice(0, 16).arrayBuffer().then(function (buf) {
+          var b = new Uint8Array(buf);
+          function matches(sig, offset) {
+            offset = offset || 0;
+            for (var i = 0; i < sig.length; i++) if (b[offset + i] !== sig[i]) return false;
+            return true;
+          }
+          if (matches([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return Promise.resolve({ ok: true, mimeType: "image/png" });
+          if (matches([0xff, 0xd8, 0xff])) return Promise.resolve({ ok: true, mimeType: "image/jpeg" });
+          if (matches([0x52, 0x49, 0x46, 0x46]) && matches([0x57, 0x45, 0x42, 0x50], 8)) return Promise.resolve({ ok: true, mimeType: "image/webp" });
+          // not a recognized binary signature — check whether it's SVG
+          // text, and if so, scan the WHOLE file (not just these 16
+          // bytes) for an embedded <script> before accepting it.
+          return file.text().then(function (text) {
+            if (/^\s*(<\?xml|<svg)/i.test(text)) {
+              if (/<script[\s>]/i.test(text)) {
+                return { ok: false, reason: "SVG failed sanitization — it contains a <script> tag." };
+              }
+              return { ok: true, mimeType: "image/svg+xml" };
+            }
+            return { ok: false, reason: "Unsupported or unrecognized file type (sniffed bytes: " + bytesToHex(b.slice(0, 8)) + ")." };
+          });
+        });
+      }
+
+      function readDimensions(file, mimeType) {
+        if (mimeType === "image/svg+xml") return Promise.resolve(null);
+        return new Promise(function (resolve) {
+          var img = new Image();
+          var url = URL.createObjectURL(file);
+          img.onload = function () {
+            resolve({ w: img.naturalWidth, h: img.naturalHeight });
+          };
+          img.onerror = function () {
+            resolve(null);
+          };
+          img.src = url;
+        });
+      }
+
+      function handleFile(file) {
+        if (file.size > MAX_BYTES) {
+          UI.toast("File exceeds the 8 MiB limit.", "error");
+          return;
+        }
+        sniff(file).then(function (result) {
+          if (!result.ok) {
+            UI.toast(result.reason, "error");
+            return;
+          }
+          readDimensions(file, result.mimeType).then(function (dimensions) {
+            var objectUrl = URL.createObjectURL(file);
+            Api.send("POST", "/api/admin/media", {
+              filename: file.name,
+              size: file.size,
+              sniffedType: result.mimeType,
+              dimensions: dimensions,
+              objectUrl: objectUrl
+            }).then(
+              function () {
+                UI.toast("Uploaded.", "success");
+                refresh();
+              },
+              function (err) {
+                UI.toast(err.message, "error");
+              }
+            );
+          });
+        });
+      }
+
+      dropzone.addEventListener("click", function () { fileInput.click(); });
+      dropzone.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") fileInput.click(); });
+      fileInput.addEventListener("change", function () {
+        if (fileInput.files[0]) handleFile(fileInput.files[0]);
+        fileInput.value = "";
+      });
+      ["dragenter", "dragover"].forEach(function (evt) {
+        dropzone.addEventListener(evt, function (e) { e.preventDefault(); dropzone.classList.add("is-dragover"); });
+      });
+      ["dragleave", "drop"].forEach(function (evt) {
+        dropzone.addEventListener(evt, function (e) { e.preventDefault(); dropzone.classList.remove("is-dragover"); });
+      });
+      dropzone.addEventListener("drop", function (e) {
+        var file = e.dataTransfer.files[0];
+        if (file) handleFile(file);
+      });
+
+      function placeholderHtml(label) {
+        return '<span style="font-size:0.7rem;color:var(--ink-muted);padding:8px;text-align:center;">' + UI.escapeHtml(label) + "</span>";
+      }
+
+      function cardHtml(row) {
+        var thumb = row.objectUrl && row.mimeType !== "image/svg+xml"
+          ? '<img data-media-thumb src="' + row.objectUrl + '" alt="" />'
+          : placeholderHtml(row.mimeType);
+        return (
+          '<div class="media-card">' +
+          '<div class="media-card__thumb">' + thumb + "</div>" +
+          '<div class="media-card__meta">' +
+          '<div class="media-card__filename">' + UI.escapeHtml(row.filename) + "</div>" +
+          "<div>" + (Math.round(row.size / 1024)) + " KB" + (row.dimensions ? " · " + row.dimensions.w + "×" + row.dimensions.h : "") + "</div>" +
+          "</div>" +
+          '<div class="media-card__actions">' +
+          '<button type="button" class="btn btn--small" data-copy="' + row.id + '">Copy URL</button>' +
+          '<button type="button" class="btn btn--small btn--danger" data-delete="' + row.id + '">Delete</button>' +
+          "</div></div>"
+        );
+      }
+
+      function refresh() {
+        Api.send("GET", "/api/admin/media").then(function (env) {
+          var grid = UI.qs("[data-media-grid]");
+          grid.innerHTML = env.data.length ? env.data.map(cardHtml).join("") : '<p style="color:var(--ink-muted);">Nothing uploaded yet.</p>';
+          UI.qsa("[data-media-thumb]", grid).forEach(function (img) {
+            img.addEventListener("error", function () {
+              img.parentElement.innerHTML = placeholderHtml("thumbnail unavailable after reload");
+            });
+          });
+          UI.qsa("[data-copy]", grid).forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              var url = location.origin + "/api/media/" + btn.dataset.copy;
+              navigator.clipboard && navigator.clipboard.writeText(url).then(function () { UI.toast("Copied: " + url, "success"); });
+            });
+          });
+          UI.qsa("[data-delete]", grid).forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              UI.confirmDialog({ title: "Delete this file?", message: "Removes the original and all derivatives. Cannot be undone.", danger: true, confirmLabel: "Delete" }).then(function (yes) {
+                if (yes) Api.send("DELETE", "/api/admin/media/" + btn.dataset.delete).then(function () { refresh(); });
+              });
+            });
+          });
+        });
+      }
+
+      Api.me().then(refresh);
+    })();
+  </script>
+</body>
+</html>
