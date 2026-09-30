@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Edit page — Admin</title>
+  <link rel="stylesheet" href="assets/tokens.css?v=1" />
+  <link rel="stylesheet" href="assets/admin.css?v=1" />
+</head>
+<body>
+  <div class="admin-gate-notice" data-admin-gate-notice>Loading admin…</div>
+  <div class="admin-shell" data-admin-shell hidden>
+    <div class="admin-topbar" data-admin-topbar></div>
+    <aside class="admin-sidebar" data-admin-sidebar></aside>
+    <main class="admin-main" data-admin-main>
+      <div class="editor-toolbar">
+        <div class="editor-toolbar__title"><span data-page-title>Loading…</span></div>
+        <div class="editor-toolbar__actions">
+          <button type="button" class="btn btn--primary" data-save>Save (live immediately)</button>
+        </div>
+      </div>
+
+      <div class="form-notice">
+        Changes here go live immediately. There is no draft state and no undo for a page —
+        unlike projects and posts, this content type never got the draft/publish mechanism
+        (§2's divergence #2, §7).
+      </div>
+
+      <form data-page-form>
+        <div class="section-block" id="core-fields"></div>
+      </form>
+    </main>
+  </div>
+
+  <script src="assets/diagram.js?v=1"></script>
+  <script src="assets/seed-content.js?v=1"></script>
+  <script src="assets/seed.js?v=1"></script>
+  <script src="assets/db.js?v=1"></script>
+  <script src="assets/api.js?v=1"></script>
+  <script src="assets/routes.js?v=1"></script>
+  <script src="assets/ui.js?v=1"></script>
+  <script src="assets/app.js?v=1"></script>
+  <script src="assets/devtools.js?v=1"></script>
+  <script>
+    (function () {
+      "use strict";
+      var UI = window.AdminUI, Api = window.Api;
+      window.AdminApp.mountShell("pages", "Edit page");
+      var id = new URLSearchParams(location.search).get("id");
+      var form = UI.qs("[data-page-form]");
+
+      function load() {
+        Api.send("GET", "/api/admin/pages/" + id).then(function (env) {
+          var row = env.data;
+          UI.qs("[data-page-title]").textContent = row.title;
+          document.title = row.title + " — Admin";
+          UI.qs("#core-fields").innerHTML =
+            UI.field({ name: "slug", label: "Slug", value: row.slug }) +
+            UI.field({ name: "title", label: "Title", value: row.title }) +
+            UI.field({ name: "body", label: "Body", value: row.body, textarea: true, rows: 6 });
+        });
+      }
+
+      UI.qs("[data-save]").addEventListener("click", function () {
+        UI.clearFieldErrors(form);
+        var patch = UI.readForm(form, ["slug", "title", "body"]);
+        Api.send("PUT", "/api/admin/pages/" + id, function () { return patch; }).then(
+          function (env) { UI.toast(env.message, "success"); load(); },
+          function (err) { UI.applyFieldErrors(form, err); UI.toast(err.message, "error"); }
+        );
+      });
+
+      Api.me().then(load);
+    })();
+  </script>
+</body>
+</html>

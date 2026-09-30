@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Dashboard — Admin</title>
+  <link rel="stylesheet" href="assets/tokens.css?v=1" />
+  <link rel="stylesheet" href="assets/admin.css?v=1" />
+</head>
+<body>
+  <div class="admin-gate-notice" data-admin-gate-notice>Loading admin…</div>
+  <div class="admin-shell" data-admin-shell hidden>
+    <div class="admin-topbar" data-admin-topbar></div>
+    <aside class="admin-sidebar" data-admin-sidebar></aside>
+    <main class="admin-main" data-admin-main>
+      <div class="admin-page-head">
+        <h1>Dashboard</h1>
+      </div>
+
+      <div class="stat-row" data-stat-row></div>
+
+      <div class="section-block">
+        <h2>Unpublished changes</h2>
+        <ul class="list-simple" data-unpublished-list><li>Loading…</li></ul>
+      </div>
+
+      <div class="section-block">
+        <h2>Recent activity</h2>
+        <p class="text-small" style="color:var(--ink-muted);margin:0 0 var(--space-3);font-size:0.8125rem;">
+          Last 8 of up to 200 recorded revisions across every content type — a global recency feed, not the
+          per-entity history panel (that one always filters by entity; see §11).
+        </p>
+        <ul class="list-simple" data-recent-list><li>Loading…</li></ul>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/diagram.js?v=1"></script>
+  <script src="assets/seed-content.js?v=1"></script>
+  <script src="assets/seed.js?v=1"></script>
+  <script src="assets/db.js?v=1"></script>
+  <script src="assets/api.js?v=1"></script>
+  <script src="assets/routes.js?v=1"></script>
+  <script src="assets/ui.js?v=1"></script>
+  <script src="assets/app.js?v=1"></script>
+  <script src="assets/devtools.js?v=1"></script>
+  <script>
+    (function () {
+      "use strict";
+      var UI = window.AdminUI, Api = window.Api;
+      window.AdminApp.mountShell("dashboard", "Dashboard");
+
+      function loadStats() {
+        Promise.all([
+          Api.send("GET", "/api/admin/projects"),
+          Api.send("GET", "/api/admin/posts"),
+          Api.send("GET", "/api/admin/pages"),
+          Api.send("GET", "/api/admin/tags"),
+          Api.send("GET", "/api/admin/media"),
+          Api.send("GET", "/api/admin/cv/sections")
+        ]).then(function (results) {
+          var labels = [
+            ["Projects", "projects.html"],
+            ["Posts", "posts.html"],
+            ["Pages", "pages.html"],
+            ["Tags", "tags.html"],
+            ["Media", "media.html"],
+            ["CV sections", "cv.html"]
+          ];
+          var row = UI.qs("[data-stat-row]");
+          row.innerHTML = results
+            .map(function (env, i) {
+              return (
+                '<div class="stat-card"><a href="' + labels[i][1] + '">' +
+                '<div class="stat-card__value">' + env.data.length + "</div>" +
+                '<div class="stat-card__label">' + labels[i][0] + "</div>" +
+                "</a></div>"
+              );
+            })
+            .join("");
+
+          var projects = results[0].data;
+          var posts = results[1].data;
+          var unpublished = [];
+          projects.forEach(function (p) {
+            if (p.draftData !== null) unpublished.push({ label: p.title, href: "project-edit.html?id=" + p.id });
+            if (p.status === "draft") unpublished.push({ label: p.title + " (never published)", href: "project-edit.html?id=" + p.id });
+          });
+          posts.forEach(function (p) {
+            if (p.draftData !== null) unpublished.push({ label: p.title, href: "post-edit.html?id=" + p.id });
+            if (p.status === "draft") unpublished.push({ label: p.title + " (never published)", href: "post-edit.html?id=" + p.id });
+          });
+          var ul = UI.qs("[data-unpublished-list]");
+          ul.innerHTML = unpublished.length
+            ? unpublished.map(function (u) { return '<li><a href="' + u.href + '">' + UI.escapeHtml(u.label) + "</a><span>—</span></li>"; }).join("")
+            : "<li>Nothing staged. Everything published is live.</li>";
+        });
+      }
+
+      function loadRecent() {
+        Api.send("GET", "/api/admin/revisions").then(function (env) {
+          var ul = UI.qs("[data-recent-list]");
+          var rows = env.data.slice(0, 8);
+          ul.innerHTML = rows.length
+            ? rows.map(function (r) {
+                return "<li><span>" + r.entityType + " · " + r.entityId + "</span><span>" + UI.formatDate(r.createdAt) + "</span></li>";
+              }).join("")
+            : "<li>No edits yet.</li>";
+        });
+      }
+
+      Api.me().then(function () {
+        loadStats();
+        loadRecent();
+      });
+    })();
+  </script>
+</body>
+</html>

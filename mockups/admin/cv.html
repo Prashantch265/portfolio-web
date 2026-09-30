@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>CV — Admin</title>
+  <link rel="stylesheet" href="assets/tokens.css?v=1" />
+  <link rel="stylesheet" href="assets/admin.css?v=1" />
+</head>
+<body>
+  <div class="admin-gate-notice" data-admin-gate-notice>Loading admin…</div>
+  <div class="admin-shell" data-admin-shell hidden>
+    <div class="admin-topbar" data-admin-topbar></div>
+    <aside class="admin-sidebar" data-admin-sidebar></aside>
+    <main class="admin-main" data-admin-main>
+      <div class="admin-page-head">
+        <h1>CV</h1>
+        <span class="admin-page-head__meta">Singleton profile + ordered sections — no draft/publish (§7.2)</span>
+      </div>
+
+      <div data-cv-root></div>
+    </main>
+  </div>
+
+  <script src="assets/diagram.js?v=1"></script>
+  <script src="assets/seed-content.js?v=1"></script>
+  <script src="assets/seed.js?v=1"></script>
+  <script src="assets/db.js?v=1"></script>
+  <script src="assets/api.js?v=1"></script>
+  <script src="assets/routes.js?v=1"></script>
+  <script src="assets/ui.js?v=1"></script>
+  <script src="assets/app.js?v=1"></script>
+  <script src="assets/devtools.js?v=1"></script>
+  <script>
+    (function () {
+      "use strict";
+      var UI = window.AdminUI, Api = window.Api;
+      window.AdminApp.mountShell("cv", "CV");
+      var root = UI.qs("[data-cv-root]");
+
+      function firstRunHtml() {
+        return (
+          '<div class="section-block">' +
+          "<h2>No CV profile yet</h2>" +
+          '<p class="text-small" style="color:var(--ink-muted);">GET /api/admin/cv/profile returns no <code>data</code> key at all when none exists — this is that state, not an empty edit form for a profile that doesn\'t exist (§7.2).</p>' +
+          '<form data-create-profile-form>' +
+          UI.field({ name: "headline", label: "Headline", value: "" }) +
+          UI.field({ name: "location", label: "Location", value: "" }) +
+          UI.field({ name: "yearsExperience", label: "Years of experience", value: "" }) +
+          UI.field({ name: "summary", label: "Summary", value: "", textarea: true, rows: 3 }) +
+          '<button type="submit" class="btn btn--primary">Create CV profile</button>' +
+          "</form></div>"
+        );
+      }
+
+      function profileHtml(profile) {
+        return (
+          '<div class="section-block">' +
+          "<h2>Profile</h2>" +
+          '<form data-profile-form>' +
+          UI.field({ name: "headline", label: "Headline", value: profile.headline }) +
+          UI.field({ name: "location", label: "Location", value: profile.location }) +
+          UI.field({ name: "yearsExperience", label: "Years of experience", value: profile.yearsExperience }) +
+          UI.field({ name: "summary", label: "Summary", value: profile.summary, textarea: true, rows: 3 }) +
+          '<button type="submit" class="btn btn--primary">Save (live immediately)</button>' +
+          "</form>" +
+          '<button type="button" class="btn btn--danger btn--small" style="margin-top:var(--space-3);" data-clear-profile>Delete profile (demo reset — not a real endpoint, see notes.html)</button>' +
+          "</div>"
+        );
+      }
+
+      function sectionRowHtml(s) {
+        return (
+          '<div class="rlist__row" data-section-id="' + s.id + '">' +
+          '<div class="rlist__row-fields">' +
+          '<input data-sfield="kind" type="text" value="' + UI.escapeHtml(s.kind) + '" readonly />' +
+          '<input data-sfield="title" type="text" placeholder="Title" value="' + UI.escapeHtml(s.title) + '" />' +
+          '<input data-sfield="subtitle" type="text" placeholder="Subtitle" value="' + UI.escapeHtml(s.subtitle || "") + '" />' +
+          '<input data-sfield="dates" type="text" placeholder="Dates" value="' + UI.escapeHtml(s.dates || "") + '" />' +
+          '<textarea data-sfield="body" placeholder="Body" rows="1" style="grid-column:1/-1;">' + UI.escapeHtml(s.body || "") + "</textarea>" +
+          '<select data-sfield="visibility"><option value="public"' + (s.visibility === "public" ? " selected" : "") + '>public</option><option value="gated"' + (s.visibility === "gated" ? " selected" : "") + ">gated</option></select>" +
+          '<input data-sfield="order" type="number" value="' + s.order + '" />' +
+          "</div>" +
+          '<button type="button" class="btn btn--small" data-save-section="' + s.id + '">Save</button>' +
+          '<button type="button" class="rlist__row-remove" data-delete-section="' + s.id + '" aria-label="Delete">×</button>' +
+          "</div>"
+        );
+      }
+
+      function sectionsHtml(sections) {
+        var byKind = {};
+        sections.forEach(function (s) { (byKind[s.kind] = byKind[s.kind] || []).push(s); });
+        var html = '<div class="section-block"><h2>Sections</h2>';
+        Object.keys(byKind).forEach(function (kind) {
+          html += "<h3>" + kind + "</h3><div class=\"rlist\">" + byKind[kind].map(sectionRowHtml).join("") + "</div>";
+        });
+        html +=
+          '<form data-add-section-form style="margin-top:var(--space-4);">' +
+          '<select data-field="kind"><option value="experience">experience</option><option value="education">education</option><option value="certification">certification</option><option value="accomplishment">accomplishment</option></select> ' +
+          UI.field({ name: "title", label: "New section title", value: "" }) +
+          '<button type="submit" class="btn">+ Add section</button>' +
+          "</form></div>";
+        return html;
+      }
+
+      function wireSections() {
+        UI.qsa("[data-save-section]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var row = UI.qs('[data-section-id="' + btn.dataset.saveSection + '"]');
+            var patch = {};
+            UI.qsa("[data-sfield]", row).forEach(function (el) { if (el.dataset.sfield !== "kind") patch[el.dataset.sfield] = el.type === "number" ? Number(el.value) : el.value; });
+            Api.send("PUT", "/api/admin/cv/sections/" + btn.dataset.saveSection, patch).then(function () { UI.toast("Saved.", "success"); });
+          });
+        });
+        UI.qsa("[data-delete-section]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            UI.confirmDialog({ title: "Delete this section?", message: "Live immediately, no undo." , danger: true, confirmLabel: "Delete" }).then(function (yes) {
+              if (yes) Api.send("DELETE", "/api/admin/cv/sections/" + btn.dataset.deleteSection).then(function () { load(); });
+            });
+          });
+        });
+        var addForm = UI.qs("[data-add-section-form]");
+        if (addForm) {
+          addForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var kind = UI.qs("select", addForm).value;
+            var title = UI.qs('[data-field="title"]', addForm).value;
+            Api.send("POST", "/api/admin/cv/sections", { kind: kind, title: title, subtitle: "", dates: "", body: "", visibility: "public" }).then(
+              function () { load(); },
+              function (err) { UI.toast(err.message, "error"); }
+            );
+          });
+        }
+      }
+
+      function load() {
+        Api.send("GET", "/api/admin/cv/profile").then(function (env) {
+          if (!env.data) {
+            root.innerHTML = firstRunHtml();
+            var form = UI.qs("[data-create-profile-form]");
+            form.addEventListener("submit", function (e) {
+              e.preventDefault();
+              var patch = UI.readForm(form, ["headline", "location", "yearsExperience", "summary"]);
+              Api.send("POST", "/api/admin/cv/profile", patch).then(function () { load(); });
+            });
+            return;
+          }
+          Api.send("GET", "/api/admin/cv/sections").then(function (sectionsEnv) {
+            root.innerHTML = profileHtml(env.data) + sectionsHtml(sectionsEnv.data);
+            var profileForm = UI.qs("[data-profile-form]");
+            profileForm.addEventListener("submit", function (e) {
+              e.preventDefault();
+              var patch = UI.readForm(profileForm, ["headline", "location", "yearsExperience", "summary"]);
+              // the profile endpoint is a single POST that upserts (§7.2 has no
+              // separate create/update split for a singleton) — same route used
+              // for first-run creation above.
+              Api.send("POST", "/api/admin/cv/profile", patch).then(function () { UI.toast("Saved.", "success"); });
+            });
+            UI.qs("[data-clear-profile]").addEventListener("click", function () {
+              UI.confirmDialog({ title: "Delete the CV profile?", message: "Demo reset only — clears the profile and all sections so you can see the first-run state again.", danger: true, confirmLabel: "Delete" }).then(function (yes) {
+                if (yes) Api.send("DELETE", "/api/admin/cv/profile").then(function () { load(); });
+              });
+            });
+            wireSections();
+          });
+        });
+      }
+
+      Api.me().then(load);
+    })();
+  </script>
+</body>
+</html>

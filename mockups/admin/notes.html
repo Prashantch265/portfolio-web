@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Design notes — Admin</title>
+  <link rel="stylesheet" href="assets/tokens.css?v=1" />
+  <link rel="stylesheet" href="assets/admin.css?v=1" />
+</head>
+<body>
+  <div class="admin-gate-notice" data-admin-gate-notice>Loading admin…</div>
+  <div class="admin-shell" data-admin-shell hidden>
+    <div class="admin-topbar" data-admin-topbar></div>
+    <aside class="admin-sidebar" data-admin-sidebar></aside>
+    <main class="admin-main" data-admin-main>
+      <div class="admin-page-head">
+        <h1>Design notes</h1>
+      </div>
+
+      <div class="notes-page">
+        <section>
+          <h2>What this is</h2>
+          <p>
+            A static, no-build mockup of <code>PRD-frontend-admin.md</code> — every screen in
+            its §15 roadmap (A1–A7), backed by a fake CRUD API (<code>assets/api.js</code> +
+            <code>assets/routes.js</code>) that persists to <code>localStorage</code> instead
+            of a real Postgres-backed NestJS service. It exists so the PRD's hardest
+            decisions — the §4.3 session-expiry-mid-edit flow, the §8 draft/publish model,
+            §9's diagram-editor validation, §10's error contract — are things you can actually
+            click through, not just read a description of, before A1–A7 get built for real in
+            <code>apps/web/src/app/admin/*</code>.
+          </p>
+        </section>
+
+        <section>
+          <h2>Primitive inventory (§6)</h2>
+          <table>
+            <thead><tr><th>Primitive</th><th>Purpose</th><th>Implemented in</th></tr></thead>
+            <tbody>
+              <tr><td>Field / Label / FieldError</td><td>Wraps an input, renders a 422 <code>source</code> message for its own key</td><td><code>ui.js:fieldHtml, applyFieldErrors</code></td></tr>
+              <tr><td>TextInput, Textarea, NumberInput, Select, Checkbox</td><td>Controlled inputs, styled from admin tokens</td><td><code>ui.js:fieldHtml</code> (type-switched)</td></tr>
+              <tr><td>RepeatableList</td><td>Add/remove rows — constraints, decisions, diagram nodes/edges</td><td><code>ui.js:repeatableList</code></td></tr>
+              <tr><td>DataTable</td><td>Sortable-by-header, client-side filter, row click → editor</td><td><code>ui.js:dataTable</code></td></tr>
+              <tr><td>Toolbar</td><td>Save / Publish / Delete action row</td><td><code>.editor-toolbar</code> in <code>admin.css</code>, wired per-page</td></tr>
+              <tr><td>Modal</td><td>Re-auth, delete confirm, publish confirm</td><td><code>ui.js:modal, confirmDialog</code></td></tr>
+              <tr><td>Toast</td><td>Save/publish/delete feedback</td><td><code>ui.js:toast</code></td></tr>
+              <tr><td>SplitPane</td><td>Diagram editor layout</td><td><code>.split-pane</code> in <code>admin.css</code>, used by <code>diagram-edit.html</code></td></tr>
+              <tr><td>DirtyBadge</td><td>Renders <code>hasPendingDraft</code></td><td><code>ui.js:adaptRow, dirtyBadgeHtml</code></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2>The §10 error contract — live-fired</h2>
+          <p class="text-small" style="color:var(--ink-muted);">
+            Each row below queues a real fault on the dispatcher, then fires a real request
+            through <code>Api.request</code> — the same transport every screen uses — and
+            prints exactly what came back. Nothing here is a hand-typed example.
+          </p>
+          <table>
+            <thead><tr><th>Status</th><th>Shape</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>422 validation</td><td><code>source: {"field.path": ["msg"]}</code>, dot-paths address array rows</td><td><button type="button" class="btn btn--small" data-fire="422">Fire</button></td></tr>
+              <tr><td>400 bad id</td><td><code>source: null</code> — not an empty object</td><td><button type="button" class="btn btn--small" data-fire="400">Fire</button></td></tr>
+              <tr><td>404</td><td><code>source: null</code>, contextual message rendered verbatim</td><td><button type="button" class="btn btn--small" data-fire="404">Fire</button></td></tr>
+              <tr><td>409</td><td><code>source: null</code>, message names the conflict</td><td><button type="button" class="btn btn--small" data-fire="409">Fire</button></td></tr>
+              <tr><td>429</td><td>Verbatim human-readable message, never regex-parsed</td><td><button type="button" class="btn btn--small" data-fire="429">Fire</button></td></tr>
+              <tr><td>501</td><td>Restore button disabled+explained for unsupported entity types, never left clickable to fail</td><td><button type="button" class="btn btn--small" data-fire="501">Fire</button></td></tr>
+            </tbody>
+          </table>
+          <pre data-fire-output style="background:var(--bg-sunken);padding:var(--space-3);border-radius:2px;font-size:0.75rem;min-height:2.5em;overflow-x:auto;">Click Fire to see a real response.</pre>
+
+          <p style="margin-top:var(--space-4);">
+            Two shapes that can't be demoed this way, because they're a structural property of
+            the response rather than an error status:
+          </p>
+          <ul>
+            <li><strong>Success, no <code>data</code> key at all</strong> (not <code>data: null</code>) — every <code>DELETE</code>, and <code>GET /cv/profile</code> when no profile exists. Enforced by arity in <code>api.js:ok()</code>, not by convention: <code>ok(msg)</code> never has a <code>data</code> key; <code>ok(msg, x)</code> always does.</li>
+            <li><strong><code>_root</code> key</strong> — a whole-object issue with no specific field, rendered as a form-level banner rather than attached to any input. See <code>ui.js:applyFieldErrors</code>.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Where this mockup can't be honest</h2>
+          <p>Stated plainly rather than silently faked:</p>
+          <ul>
+            <li><strong>The httpOnly cookie + server-side gate (§3)</strong> is impossible to fake statically. The shell ships <code>hidden</code> and reveals itself only once <code>Api.me()</code> resolves — visually faithful to "no content reaches an unauthenticated visitor," security-wise not real. See the comment above <code>mountShell</code> in <code>app.js</code>.</li>
+            <li><strong>TOTP</strong> accepts any 6-digit code except the literal <code>000000</code>, so the wrong-code path stays reachable without a real authenticator app.</li>
+            <li><strong>Media bytes</strong> are never written to <code>localStorage</code> — its ~5MB quota would corrupt every other row in this mockup on the first real photo. Files live as in-memory object URLs plus a metadata row; the 8 MiB cap and byte-sniffing are still real checks against the real file, they just don't survive a reload.</li>
+            <li><strong>ISR propagation to the public site</strong> — there's nothing here to demonstrate; publishing in this mockup updates only this mockup's own <code>localStorage</code>.</li>
+            <li><strong>Login credentials</strong> — any non-empty email/password succeeds except the literal password <code>wrong</code> (401), so the failure path is reachable without a real account.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>A stated simplification</h2>
+          <p>
+            §7.1 gives each case-study section its own <code>PUT .../sections/:kind</code>
+            endpoint. This mockup keeps those as four genuinely separate requests (see
+            <code>project-edit.html</code>'s Save handler) rather than folding them into one —
+            it's more faithful to the real contract, not less, and it's what makes a
+            <code>caseStudySection</code> revision (and its §11 501-on-restore path) something
+            that actually happened rather than something simulated.
+          </p>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/diagram.js?v=1"></script>
+  <script src="assets/seed-content.js?v=1"></script>
+  <script src="assets/seed.js?v=1"></script>
+  <script src="assets/db.js?v=1"></script>
+  <script src="assets/api.js?v=1"></script>
+  <script src="assets/routes.js?v=1"></script>
+  <script src="assets/ui.js?v=1"></script>
+  <script src="assets/app.js?v=1"></script>
+  <script src="assets/devtools.js?v=1"></script>
+  <script>
+    (function () {
+      "use strict";
+      var UI = window.AdminUI, Api = window.Api, DB = window.AdminDB;
+      window.AdminApp.mountShell("notes", "Design notes");
+
+      var MESSAGES = {
+        422: { message: "Validation failed.", source: { "edges.0.to": ['Edge references a nonexistent node id "ghost".'] } },
+        400: { message: "Invalid id.", source: null },
+        404: { message: "Project not found.", source: null },
+        409: { message: "This slug is already used by another project — change it before publishing.", source: null },
+        429: { message: "Too many failed attempts. Try again in 12 minutes.", source: null },
+        501: { message: 'Restore is not yet supported for entity type "caseStudySection".', source: null }
+      };
+
+      UI.qsa("[data-fire]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var status = Number(btn.dataset.fire);
+          var m = MESSAGES[status];
+          DB.faults.push({ status: status, method: "GET", pathPattern: "/api/admin/auth/me", once: true, message: m.message, source: m.source });
+          Api.request("GET", "/api/admin/auth/me").then(
+            function (env) {
+              UI.qs("[data-fire-output]").textContent = JSON.stringify(env, null, 2);
+            },
+            function (err) {
+              UI.qs("[data-fire-output]").textContent = JSON.stringify(
+                { success: false, statusCode: err.statusCode, message: err.message, source: err.source, correlationId: err.correlationId, timestamp: err.timestamp },
+                null,
+                2
+              );
+            }
+          );
+        });
+      });
+
+      Api.me();
+    })();
+  </script>
+</body>
+</html>

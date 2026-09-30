@@ -52,6 +52,9 @@
     a.card .name { font-weight: 600; font-size: 1.1rem; display: block; margin-bottom: 6px; }
     a.card .desc { color: var(--ink-muted); font-size: 0.9rem; line-height: 1.5; }
     footer { margin-top: 40px; color: var(--ink-muted); font-size: 0.85rem; }
+    hr.section-rule { border: none; border-top: 1px solid var(--rule); margin: 40px 0 24px; }
+    h2.section-heading { font-size: 1.1rem; margin: 0 0 6px; }
+    p.section-note { color: var(--ink-muted); font-size: 0.85rem; margin: 0 0 16px; max-width: 56ch; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -79,6 +82,21 @@
         <span class="desc">Blueprint's readable chassis with Console's command palette and live status strip grafted on.</span>
       </a>
     </div>
+    <hr class="section-rule" />
+    <h2 class="section-heading">Admin CMS</h2>
+    <p class="section-note">
+      Not a brand direction — nothing to A/B here, one owner, one UI. A working mockup of
+      <code>PRD-frontend-admin.md</code>, built on Schematic's tokens, with a fake
+      localStorage-backed API so the draft/publish, session, and error-handling contracts
+      are actually clickable.
+    </p>
+    <div class="cards">
+      <a class="card" href="mockups/admin/login.html">
+        <span class="name">Admin</span>
+        <span class="desc">Every screen in the §15 roadmap — auth, projects, diagram editor, media, CV, revisions.</span>
+      </a>
+    </div>
+
     <footer>Mockups only — not the final build.</footer>
   </main>
 </body>
