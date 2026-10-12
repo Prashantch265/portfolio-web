@@ -381,6 +381,34 @@
   border-color: var(--signal);
 }
 
+/* The browser's native <select> arrow sits a fixed distance from the
+   border regardless of padding-right — it isn't part of the padding
+   box, so it reads as cramped against the edge no matter how much
+   padding the rule above gives it. Hiding it and drawing our own
+   respects the box's own spacing instead. A background-image data URI
+   can't reference a CSS custom property, so the arrow's color is a
+   literal hex matching --ink-muted — light and dark need their own
+   copy of this rule, same as every other place this file hardcodes a
+   dark-mode value (e.g. --bg-sunken above). */
+.admin-root .field select,
+.admin-root .rlist__row-fields select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%235c5c5c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+:root[data-theme="dark"] .admin-root .field select,
+:root[data-theme="dark"] .admin-root .rlist__row-fields select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23a3a3a3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .admin-root .field select,
+  :root:not([data-theme="light"]) .admin-root .rlist__row-fields select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23a3a3a3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  }
+}
+
 .admin-root .field--error input,
 .admin-root .field--error textarea,
 .admin-root .field--error select {
