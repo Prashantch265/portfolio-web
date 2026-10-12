@@ -46,25 +46,40 @@ export function TagRowEditor({ row, onSaved, onDeleted }: { row: TagRow; onSaved
   return (
     <tr>
       <td>
-        <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} aria-label={`Label for ${row.label}`} />
+        {/* .field is what gives an input/select the app's dark-aware
+            background/border/text color (admin.css); without it these
+            fall back to the browser's own default control styling,
+            which reads as a near-illegible pale box against a dark
+            page — exactly the bug this wrapper fixes. */}
+        <div className="field" style={{ marginBottom: 0 }}>
+          <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} aria-label={`Label for ${row.label}`} />
+        </div>
         {error ? <div className="field__error">{error}</div> : null}
       </td>
       <td>
-        <select value={kind} onChange={(e) => setKind(e.target.value as TagKind)} aria-label={`Kind for ${row.label}`}>
-          {KIND_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <select value={kind} onChange={(e) => setKind(e.target.value as TagKind)} aria-label={`Kind for ${row.label}`}>
+            {KIND_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </td>
-      <td style={{ display: "flex", gap: 6 }}>
-        <Button small onClick={() => void save()} disabled={!dirty || saving}>
-          {saving ? "Saving…" : "Save"}
-        </Button>
-        <Button small variant="danger" onClick={() => setConfirmDelete(true)}>
-          Delete
-        </Button>
+      <td>
+        {/* flex belongs on a div inside the cell, not the <td> itself —
+            display:flex directly on a table cell breaks the table's own
+            row-height/alignment model, which is what produced the
+            uneven row heights. */}
+        <div style={{ display: "flex", gap: 6 }}>
+          <Button small onClick={() => void save()} disabled={!dirty || saving}>
+            {saving ? "Saving…" : "Save"}
+          </Button>
+          <Button small variant="danger" onClick={() => setConfirmDelete(true)}>
+            Delete
+          </Button>
+        </div>
       </td>
       <ConfirmDialog
         open={confirmDelete}
