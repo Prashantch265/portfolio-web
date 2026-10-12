@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, send, splitFieldErrors } from "../../../_lib/api-client";
-import { Button } from "../../../_components/button";
+import { Button, ButtonLink } from "../../../_components/button";
 import { TextInput, NumberInput, TextareaField, CheckboxField, FormBanner } from "../../../_components/field";
 import { RepeatableList } from "../../../_components/repeatable-list";
 import { ConfirmDialog } from "../../../_components/modal";
@@ -88,6 +88,37 @@ export function ProjectEditorView({ id }: { id: string }) {
       .then((env) => setDiagram((env.data ?? []).find((d) => d.ownerId === projectId) ?? null))
       .catch(() => setDiagram(null));
   }, [projectId]);
+
+  const [creatingDiagram, setCreatingDiagram] = useState(false);
+
+  async function handleCreateDiagram() {
+    if (!projectId) return;
+    setCreatingDiagram(true);
+    try {
+      // A diagram needs >=1 node (real backend min-1 validation) — a
+      // genuinely blank diagram isn't representable, so creation starts
+      // with one real, editable placeholder node rather than failing.
+      await send("POST", "/diagrams", {
+        ownerType: "project",
+        ownerId: projectId,
+        nodes: [
+          {
+            id: "client",
+            type: "client",
+            label: "Client",
+            col: 0,
+            row: 0,
+            annotation: { role: "Entry point for this diagram — edit or replace this starter node.", reasoning: null, alternative: null },
+          },
+        ],
+        edges: [],
+      });
+      router.push(`/admin/projects/${projectId}/diagram`);
+    } catch (err) {
+      if (err instanceof ApiError) setBanner(err.message);
+      setCreatingDiagram(false);
+    }
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -303,13 +334,21 @@ export function ProjectEditorView({ id }: { id: string }) {
         {diagram === undefined ? (
           <p>Loading…</p>
         ) : diagram === null ? (
-          <p className="admin-page-head__meta">No diagram for this project yet. The diagram editor ships in slice A4.</p>
+          !projectId ? (
+            <p className="admin-page-head__meta">Save this project first to add a diagram.</p>
+          ) : (
+            <Button onClick={() => void handleCreateDiagram()} disabled={creatingDiagram}>
+              {creatingDiagram ? "Creating…" : "+ Create diagram"}
+            </Button>
+          )
         ) : (
-          <p className="admin-page-head__meta">
-            Has a diagram ({diagram.publishedVersion !== null ? "published" : "draft only"}
-            {diagram.draftData !== null && diagram.draftData !== undefined ? ", unpublished changes" : ""}) — editable once
-            slice A4 ships.
-          </p>
+          <>
+            <p className="admin-page-head__meta" style={{ marginBottom: "var(--space-2)" }}>
+              {diagram.publishedVersion !== null ? "Published" : "Draft only"}
+              {diagram.draftData !== null && diagram.draftData !== undefined ? " — unpublished changes" : ""}
+            </p>
+            <ButtonLink href={`/admin/projects/${projectId}/diagram`}>Edit diagram →</ButtonLink>
+          </>
         )}
       </div>
 
