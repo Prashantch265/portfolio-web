@@ -1,0 +1,827 @@
+/*
+  Admin shell — PRD-frontend-admin.md §5, §6. Operate mode: density over
+  generosity, scanability and keyboard operability outrank expression.
+  Desktop-first, 1024px floor (§5, §13) — below that: usable, not designed.
+
+  Every selector is scoped under .admin-root. The public site's own
+  base.css (globals.css, loaded by the root layout for every route
+  including /admin/*) already defines .btn/.field/.label etc. for its own
+  reading surfaces — without this prefix those rules would collide on
+  /admin pages instead of this stylesheet's own class names winning.
+  Loaded only by admin/layout.tsx, never globals.css, so none of it ships
+  to a public-page bundle either (PRD §13).
+*/
+
+.admin-root {
+  --admin-sidebar-w: 216px;
+  --admin-row-h: 40px;
+  --admin-header-h: 48px;
+  --bg-sunken: #f2f2f2;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--face-body);
+  font-size: 15px;
+  line-height: 1.45;
+  min-height: 100vh;
+}
+
+:root[data-theme="dark"] .admin-root {
+  --bg-sunken: #171717;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .admin-root {
+    --bg-sunken: #171717;
+  }
+}
+
+.admin-root * {
+  box-sizing: border-box;
+}
+.admin-root button,
+.admin-root input,
+.admin-root textarea,
+.admin-root select {
+  font: inherit;
+  color: inherit;
+}
+.admin-root a {
+  color: inherit;
+}
+
+/* -----------------------------------------------------------------
+   Auth gate notice — shown by login.html's real-world equivalent: the
+   server-side redirect in (authenticated)/layout.tsx means an
+   unauthenticated visitor never sees anything past this, so there is no
+   client-side hidden/reveal dance to replicate here (§3's real server
+   gate, not the mockup's fake one).
+----------------------------------------------------------------- */
+
+/* -----------------------------------------------------------------
+   Shell layout
+----------------------------------------------------------------- */
+.admin-shell {
+  display: grid;
+  grid-template-columns: var(--admin-sidebar-w) 1fr;
+  grid-template-rows: var(--admin-header-h) 1fr;
+  grid-template-areas: "sidebar topbar" "sidebar main";
+  min-height: 100vh;
+}
+
+@media (max-width: 1023px) {
+  .admin-shell {
+    min-width: 1024px;
+  } /* usable, not designed — §5 */
+}
+
+.admin-topbar {
+  grid-area: topbar;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-4);
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+  background: var(--bg);
+}
+
+.admin-topbar__title {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+}
+
+.admin-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.admin-sidebar {
+  grid-area: sidebar;
+  border-right: var(--rule-hairline-w) solid var(--rule);
+  background: var(--bg-sunken);
+  padding: var(--space-4) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.admin-sidebar__wordmark {
+  font-family: var(--face-mono);
+  font-weight: 600;
+  font-size: var(--text-small-size);
+  padding: 0 var(--space-4) var(--space-4);
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+  margin-bottom: var(--space-3);
+  display: block;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.admin-sidebar nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-sidebar a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4);
+  text-decoration: none;
+  color: var(--ink-muted);
+  font-size: var(--text-small-size);
+  border-left: 2px solid transparent;
+}
+
+.admin-sidebar a:hover {
+  color: var(--ink);
+  background: var(--bg-raised);
+}
+
+.admin-sidebar a[aria-current="page"] {
+  color: var(--ink);
+  border-left-color: var(--signal);
+  background: var(--bg-raised);
+  font-weight: 500;
+}
+
+.admin-sidebar__count {
+  font-family: var(--face-mono);
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.admin-main {
+  grid-area: main;
+  padding: var(--space-5);
+  overflow-x: auto;
+}
+
+.admin-page-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.admin-page-head h1 {
+  font-family: var(--face-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.admin-page-head__meta {
+  font-family: var(--face-mono);
+  font-size: var(--text-small-size);
+  color: var(--ink-muted);
+}
+
+/* -----------------------------------------------------------------
+   Theme toggle — reuses @portfolio/ui's <ThemeToggle>, admin-compact sizing
+----------------------------------------------------------------- */
+.admin-root .theme-toggle {
+  border: var(--rule-hairline-w) solid var(--rule);
+  background: var(--bg);
+  border-radius: 2px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.admin-root .theme-toggle:hover {
+  border-color: var(--ink-muted);
+}
+.admin-root .theme-toggle svg {
+  width: 15px;
+  height: 15px;
+}
+.admin-root .theme-toggle .icon-moon {
+  display: none;
+}
+:root[data-theme="dark"] .admin-root .theme-toggle .icon-sun {
+  display: none;
+}
+:root[data-theme="dark"] .admin-root .theme-toggle .icon-moon {
+  display: block;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .admin-root .theme-toggle .icon-sun {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .admin-root .theme-toggle .icon-moon {
+    display: block;
+  }
+}
+
+/* -----------------------------------------------------------------
+   DataTable — §6 (used starting A2, styles ship now to avoid re-touching CSS per slice)
+----------------------------------------------------------------- */
+.admin-root .admin-toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.admin-root .admin-filter-input {
+  border: var(--rule-hairline-w) solid var(--rule);
+  background: var(--bg);
+  border-radius: 2px;
+  padding: 6px 10px;
+  font-size: var(--text-small-size);
+  min-width: 240px;
+}
+.admin-root .admin-filter-input:focus {
+  border-color: var(--signal);
+}
+
+.admin-root table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-small-size);
+}
+
+.admin-root .data-table thead th {
+  text-align: left;
+  font-family: var(--face-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  background: var(--bg-sunken);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.admin-root .data-table thead th:hover {
+  color: var(--ink);
+}
+.admin-root .data-table thead th[aria-sort="ascending"]::after {
+  content: " \2191";
+}
+.admin-root .data-table thead th[aria-sort="descending"]::after {
+  content: " \2193";
+}
+
+.admin-root .data-table tbody td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+  height: var(--admin-row-h);
+  vertical-align: middle;
+}
+
+.admin-root .data-table tbody tr {
+  cursor: pointer;
+}
+.admin-root .data-table tbody tr:hover td {
+  background: var(--bg-raised);
+}
+.admin-root .data-table tbody tr:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
+}
+
+.admin-root .data-table__empty {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: var(--text-small-size);
+}
+
+.admin-root .status-pill {
+  display: inline-block;
+  font-family: var(--face-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 2px;
+  border: var(--rule-hairline-w) solid var(--rule);
+  color: var(--ink-muted);
+}
+.admin-root .status-pill--published {
+  color: var(--success);
+  border-color: var(--success);
+}
+.admin-root .status-pill--draft {
+  color: var(--ink-muted);
+}
+
+/* -----------------------------------------------------------------
+   DirtyBadge — "the single most important piece of state on most
+   screens" (§8): unpublished-changes indicator
+----------------------------------------------------------------- */
+.admin-root .dirty-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--face-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.03em;
+  color: var(--signal);
+  background: var(--signal-fill);
+  border-radius: 2px;
+  padding: 2px 7px;
+}
+.admin-root .dirty-badge::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--signal);
+}
+
+/* -----------------------------------------------------------------
+   Forms — Field/Label/FieldError, TextInput, Textarea, Select, Checkbox
+----------------------------------------------------------------- */
+.admin-root .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--space-3);
+}
+
+.admin-root .field label {
+  font-family: var(--face-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+
+.admin-root .field input[type="text"],
+.admin-root .field input[type="email"],
+.admin-root .field input[type="password"],
+.admin-root .field input[type="number"],
+.admin-root .field input[type="date"],
+.admin-root .field textarea,
+.admin-root .field select {
+  border: var(--rule-hairline-w) solid var(--rule);
+  background: var(--bg);
+  border-radius: 2px;
+  padding: 7px 10px;
+  font-size: var(--text-body-size);
+  width: 100%;
+}
+.admin-root .field textarea {
+  min-height: 90px;
+  resize: vertical;
+  font-family: var(--face-body);
+}
+.admin-root .field input:focus,
+.admin-root .field textarea:focus,
+.admin-root .field select:focus {
+  border-color: var(--signal);
+}
+
+.admin-root .field--error input,
+.admin-root .field--error textarea,
+.admin-root .field--error select {
+  border-color: var(--danger);
+}
+
+.admin-root .field__error {
+  font-size: 0.75rem;
+  color: var(--danger);
+}
+
+.admin-root .field--checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.admin-root .field--checkbox label {
+  color: var(--ink);
+  font-family: var(--face-body);
+  font-size: var(--text-body-size);
+}
+
+.admin-root .form-banner {
+  border: var(--rule-hairline-w) solid var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, var(--bg));
+  color: var(--danger);
+  border-radius: 2px;
+  padding: var(--space-3);
+  font-size: var(--text-small-size);
+  margin-bottom: var(--space-4);
+}
+
+.admin-root .form-notice {
+  border: var(--rule-hairline-w) solid var(--rule-emphasis);
+  background: var(--signal-fill);
+  border-radius: 2px;
+  padding: var(--space-3);
+  font-size: var(--text-small-size);
+  margin-bottom: var(--space-4);
+  color: var(--ink);
+}
+
+/* -----------------------------------------------------------------
+   RepeatableList — §6 (ships A2)
+----------------------------------------------------------------- */
+.admin-root .rlist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.admin-root .rlist__row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-3);
+  background: var(--bg-raised);
+}
+.admin-root .rlist__row-fields {
+  flex: 1;
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+.admin-root .rlist__row-remove {
+  border: var(--rule-hairline-w) solid var(--rule);
+  background: var(--bg);
+  border-radius: 2px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  color: var(--danger);
+  flex-shrink: 0;
+}
+.admin-root .rlist__row-remove:hover {
+  border-color: var(--danger);
+}
+.admin-root .rlist__add {
+  align-self: flex-start;
+}
+
+/* -----------------------------------------------------------------
+   Toolbar — save draft / publish / delete, consistent placement
+----------------------------------------------------------------- */
+.admin-root .editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  background: var(--bg-sunken);
+  margin-bottom: var(--space-4);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.admin-root .editor-toolbar__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+.admin-root .editor-toolbar__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 500;
+}
+
+.admin-root .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: var(--rule-hairline-w) solid var(--rule);
+  background: var(--bg);
+  color: var(--ink);
+  border-radius: 2px;
+  padding: 7px 14px;
+  font-size: var(--text-small-size);
+  cursor: pointer;
+  text-decoration: none;
+}
+.admin-root .btn:hover {
+  border-color: var(--ink-muted);
+}
+.admin-root .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.admin-root .btn--primary {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: var(--on-signal);
+}
+.admin-root .btn--primary:hover {
+  border-color: var(--signal);
+  opacity: 0.9;
+}
+.admin-root .btn--danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.admin-root .btn--danger:hover {
+  background: color-mix(in srgb, var(--danger) 8%, var(--bg));
+}
+.admin-root .btn--small {
+  padding: 4px 9px;
+  font-size: 0.75rem;
+}
+
+/* -----------------------------------------------------------------
+   Modal — re-auth, delete confirm, publish confirm
+----------------------------------------------------------------- */
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 400;
+}
+.admin-modal {
+  background: var(--bg);
+  color: var(--ink);
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-5);
+  width: 420px;
+  max-width: calc(100vw - var(--space-5) * 2);
+}
+.admin-modal h2 {
+  font-size: 1.125rem;
+  margin: 0 0 var(--space-2);
+  font-family: var(--face-display);
+}
+.admin-modal p {
+  color: var(--ink-muted);
+  font-size: var(--text-small-size);
+  margin: 0 0 var(--space-4);
+}
+.admin-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* -----------------------------------------------------------------
+   Toast
+----------------------------------------------------------------- */
+.admin-toast-stack {
+  position: fixed;
+  bottom: var(--space-4);
+  right: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  z-index: 500;
+}
+.admin-toast {
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 2px;
+  padding: 10px 14px;
+  font-size: var(--text-small-size);
+  box-shadow: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity var(--motion-fast) var(--ease-standard),
+    transform var(--motion-fast) var(--ease-standard);
+}
+.admin-toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.admin-toast--error {
+  background: var(--danger);
+}
+.admin-toast--success {
+  background: var(--success);
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-toast {
+    transition: none;
+  }
+}
+
+/* -----------------------------------------------------------------
+   SplitPane — diagram editor layout (ships A4)
+----------------------------------------------------------------- */
+.admin-root .split-pane {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+.admin-root .split-pane__editor {
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-4);
+  max-height: calc(100vh - var(--admin-header-h) - var(--space-5) * 2);
+  overflow-y: auto;
+}
+.admin-root .split-pane__preview {
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-4);
+  position: sticky;
+  top: var(--space-4);
+}
+.admin-root .split-pane__preview-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+/* -----------------------------------------------------------------
+   Cards / dashboard
+----------------------------------------------------------------- */
+.admin-root .stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.admin-root .stat-card {
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-3);
+}
+.admin-root .stat-card__value {
+  font-family: var(--face-mono);
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+.admin-root .stat-card__label {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+.admin-root .stat-card a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.admin-root .stat-card a:hover {
+  border-color: var(--ink-muted);
+}
+
+.admin-root .list-simple {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.admin-root .list-simple li {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+  font-size: var(--text-small-size);
+}
+.admin-root .list-simple a {
+  text-decoration: none;
+  color: var(--signal);
+}
+.admin-root .list-simple a:hover {
+  text-decoration: underline;
+}
+
+.admin-root .section-block {
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.admin-root .section-block h2 {
+  font-size: 1rem;
+  margin: 0 0 var(--space-3);
+}
+.admin-root .section-block h3 {
+  font-size: 0.875rem;
+  margin: 0 0 var(--space-2);
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+/* -----------------------------------------------------------------
+   Revisions panel (ships A6)
+----------------------------------------------------------------- */
+.admin-root .revision-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+  border-bottom: var(--rule-hairline-w) solid var(--rule);
+  font-size: var(--text-small-size);
+}
+.admin-root .revision-row__meta {
+  color: var(--ink-muted);
+  font-family: var(--face-mono);
+  font-size: 0.75rem;
+}
+
+/* -----------------------------------------------------------------
+   Media library (ships A5)
+----------------------------------------------------------------- */
+.admin-root .dropzone {
+  border: 2px dashed var(--rule);
+  border-radius: 2px;
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--ink-muted);
+  margin-bottom: var(--space-4);
+  cursor: pointer;
+}
+.admin-root .dropzone.is-dragover {
+  border-color: var(--signal);
+  color: var(--signal);
+  background: var(--signal-fill);
+}
+
+.admin-root .media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-3);
+}
+.admin-root .media-card {
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.admin-root .media-card__thumb {
+  aspect-ratio: 4 / 3;
+  background: var(--bg-sunken);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.admin-root .media-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.admin-root .media-card__meta {
+  padding: var(--space-2);
+  font-size: 0.75rem;
+}
+.admin-root .media-card__filename {
+  font-family: var(--face-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-root .media-card__actions {
+  display: flex;
+  gap: 6px;
+  padding: 0 var(--space-2) var(--space-2);
+}
+
+/* -----------------------------------------------------------------
+   Login screen
+----------------------------------------------------------------- */
+.admin-login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-sunken);
+}
+.admin-login-card {
+  width: 360px;
+  background: var(--bg);
+  border: var(--rule-hairline-w) solid var(--rule);
+  border-radius: 2px;
+  padding: var(--space-5);
+}
+.admin-login-card h1 {
+  font-size: 1.25rem;
+  margin: 0 0 var(--space-1);
+  font-family: var(--face-display);
+}
+.admin-login-card p.lede {
+  color: var(--ink-muted);
+  font-size: var(--text-small-size);
+  margin: 0 0 var(--space-4);
+}
+.admin-login-card__wordmark {
+  font-family: var(--face-mono);
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  margin-bottom: var(--space-3);
+}
+.admin-noindex-note {
+  font-family: var(--face-mono);
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  text-align: center;
+  margin-top: var(--space-4);
+}
