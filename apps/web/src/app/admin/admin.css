@@ -447,6 +447,31 @@
   gap: var(--space-2);
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 }
+/* RepeatableList rows hold raw inputs/textareas/selects directly (no
+   per-field .field wrapper — would fight the grid above) — so this is
+   the same dark-aware styling .field gives its own controls, scoped to
+   this container instead. Without it they fall back to the browser's
+   own default control chrome: a near-illegible pale box on a dark
+   page (caught live in the tags screen, same underlying bug, PR #28). */
+.admin-root .rlist__row-fields input:not([type="checkbox"]),
+.admin-root .rlist__row-fields textarea,
+.admin-root .rlist__row-fields select {
+  border: var(--rule-hairline-w) solid var(--rule);
+  background: var(--bg);
+  border-radius: 2px;
+  padding: 7px 10px;
+  font-size: var(--text-body-size);
+  width: 100%;
+}
+.admin-root .rlist__row-fields textarea {
+  font-family: var(--face-body);
+  resize: vertical;
+}
+.admin-root .rlist__row-fields input:focus,
+.admin-root .rlist__row-fields textarea:focus,
+.admin-root .rlist__row-fields select:focus {
+  border-color: var(--signal);
+}
 .admin-root .rlist__row-remove {
   border: var(--rule-hairline-w) solid var(--rule);
   background: var(--bg);
