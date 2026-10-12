@@ -49,11 +49,16 @@ function resolveBody(body: BodyInput | undefined): unknown {
 
 async function dispatch<T>(method: string, path: string, body: unknown): Promise<ApiSuccessEnvelope<T>> {
   const hasBody = body !== undefined;
+  // A FormData body (media upload) must NOT get a hand-set Content-Type
+  // — the browser sets multipart/form-data with the correct boundary
+  // itself only when the header is left alone. JSON.stringify-ing a
+  // FormData would also just serialize it to "[object FormData]".
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   const res = await fetch(`/api/admin${path}`, {
     method,
     credentials: "include",
-    headers: hasBody ? { "Content-Type": "application/json" } : undefined,
-    body: hasBody ? JSON.stringify(body) : undefined,
+    headers: hasBody && !isFormData ? { "Content-Type": "application/json" } : undefined,
+    body: hasBody ? (isFormData ? (body as FormData) : JSON.stringify(body)) : undefined,
   });
 
   const env = (await res.json()) as ApiSuccessEnvelope<T> | ApiErrorEnvelope;

@@ -29,6 +29,14 @@ RUN corepack enable
 
 COPY --from=builder /app .
 
+# §2's media volume mounts over this directory as root-owned by default
+# (Docker's own behavior for a fresh named volume) — without this, the
+# unprivileged nestjs user below can never write an upload to it
+# (EACCES), a bug that went unnoticed until A5 first exercised the real
+# upload path end to end. Owning it here means a freshly created volume
+# inherits this ownership from the image on first mount.
+RUN mkdir -p /app/media && chown -R nestjs:nodejs /app/media
+
 USER nestjs
 EXPOSE 3001
 ENV NODE_ENV=production
