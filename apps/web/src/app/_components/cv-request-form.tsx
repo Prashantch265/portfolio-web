@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Button } from "@portfolio/ui";
+import { Button, trackEvent } from "@portfolio/ui";
 
 type Status =
   | { kind: "idle" }
@@ -58,6 +58,10 @@ export function CvRequestForm() {
       return;
     }
     setEmailError(false);
+    // Tracks genuine interest (§10) independent of the grant lifecycle —
+    // there is no CVAccessGrant yet (backend M4) for this to key off of,
+    // so this just measures how often the gate is reached, not approvals.
+    trackEvent("cv_request", "/cv");
 
     submitCountRef.current += 1;
     const thisSubmitCount = submitCountRef.current;
