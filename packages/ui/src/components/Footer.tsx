@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Frame } from "./Frame";
 import { StatusStrip } from "./StatusStrip";
+import { trackEvent } from "../lib/analytics-client";
 
 export function Footer({
   statusStrip,
@@ -10,6 +14,8 @@ export function Footer({
   /** "home" drops the footer status strip (the prominent one already covers it) and adds the built-with note. "bare" drops the link list entirely (404 / brand). */
   variant?: "default" | "home" | "bare";
 }) {
+  const pathname = usePathname();
+
   return (
     <footer className="site-footer">
       <Frame>
@@ -32,12 +38,22 @@ export function Footer({
                 <a href="mailto:prashantchy265@gmail.com">Email</a>
               </li>
               <li>
-                <a href="https://github.com/Prashantch265" target="_blank" rel="noreferrer">
+                <a
+                  href="https://github.com/Prashantch265"
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => trackEvent("outbound_click", pathname, { target: "github" })}
+                >
                   GitHub
                 </a>
               </li>
               <li>
-                <a href="https://linkedin.com/in/prashant-ch265" target="_blank" rel="noreferrer">
+                <a
+                  href="https://linkedin.com/in/prashant-ch265"
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => trackEvent("outbound_click", pathname, { target: "linkedin" })}
+                >
                   LinkedIn
                 </a>
               </li>

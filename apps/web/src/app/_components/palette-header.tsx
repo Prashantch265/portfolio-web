@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import type { Project } from "@portfolio/types";
-import { Header } from "@portfolio/ui";
+import { Header, trackEvent } from "@portfolio/ui";
 import { CommandPalette, PALETTE_PAGES, useCommandPalette } from "@portfolio/command-palette";
 
 /**
@@ -25,6 +27,14 @@ export function PaletteHeader({
   projects: Project[];
 }) {
   const palette = useCommandPalette();
+  const pathname = usePathname();
+
+  // Every real page renders exactly one PaletteHeader (survey confirmed
+  // all eight public routes use it) — the single centralized place a
+  // pageview (§10) can fire from without each page wiring it up itself.
+  useEffect(() => {
+    trackEvent("pageview", pathname);
+  }, [pathname]);
 
   return (
     <>

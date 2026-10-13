@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { DiagramFrame } from "@portfolio/diagram";
 import { Footer, Frame, GridGuides, Tag, TagList } from "@portfolio/ui";
 import { contentSource } from "../../../lib/content/index";
 import { PaletteHeader } from "../../_components/palette-header";
+import { CaseStudyDiagram } from "../../_components/case-study-diagram";
+import { ReadDepthTracker } from "../../_components/read-depth-tracker";
 
 // No generateStaticParams — content is live now (F4), so build time has
 // no business enumerating slugs from a database that can change after
@@ -35,6 +36,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
   return (
     <>
       <PaletteHeader projects={projects} />
+      <ReadDepthTracker />
       <main>
         <Frame>
           <GridGuides />
@@ -54,11 +56,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
           </header>
 
           {project.diagram && (
-            <DiagramFrame
-              diagram={project.diagram}
-              caption="System architecture — hover or focus a node"
-              variant="panel-side"
-            />
+            <CaseStudyDiagram diagram={project.diagram} caption="System architecture — hover or focus a node" />
           )}
 
           <section className="prose-section">

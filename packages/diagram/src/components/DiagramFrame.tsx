@@ -19,6 +19,14 @@ export interface DiagramFrameProps {
   compact?: boolean;
   className?: string;
   style?: CSSProperties;
+  /**
+   * Fired whenever the hovered/focused/pinned node changes, including to
+   * `null` when nothing's active. Generic UI callback — this component
+   * has no analytics dependency of its own; a caller that wants to track
+   * attention (backend PRD §10's diagram_node event) wires this up
+   * itself.
+   */
+  onActiveNodeChange?: (node: DiagramNode | null) => void;
 }
 
 /**
@@ -35,6 +43,7 @@ export function DiagramFrame({
   compact = false,
   className,
   style,
+  onActiveNodeChange,
 }: DiagramFrameProps) {
   const isDesktop = useIsDesktopCanvas();
   const reducedMotion = usePrefersReducedMotion();
@@ -49,6 +58,10 @@ export function DiagramFrame({
   useEffect(() => {
     setActiveNode(null);
   }, [isDesktop]);
+
+  useEffect(() => {
+    onActiveNodeChange?.(activeNode);
+  }, [activeNode, onActiveNodeChange]);
 
   return (
     <div

@@ -10,3 +10,4 @@ export * from "./components/ThemeToggle";
 export * from "./components/PaletteHint";
 export * from "./components/StatusStrip";
 export * from "./ambient-motion";
+export * from "./lib/analytics-client";
