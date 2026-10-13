@@ -31,3 +31,4 @@ export * from "../../modules/cv/cv.schema";
 export * from "../../modules/admin-auth/admin-user.schema";
 export * from "../../modules/revisions/revision.schema";
 export * from "../../modules/media/media-asset.schema";
+export * from "../../modules/contact/contact.schema";

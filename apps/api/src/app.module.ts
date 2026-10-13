@@ -17,6 +17,8 @@ import { RevisionsModule } from "./modules/revisions/revisions.module.js";
 import { TagsModule } from "./modules/tags/tags.module.js";
 import { DiagramsModule } from "./modules/diagrams/diagrams.module.js";
 import { MediaModule } from "./modules/media/media.module.js";
+import { ContactModule } from "./modules/contact/contact.module.js";
+import { MailModule } from "./common/mail/mail.module.js";
 import { LoggingInterceptor } from "./common/interceptors/logging.interceptor.js";
 import { ResponseInterceptor } from "./common/interceptors/response.interceptor.js";
 import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe.js";
@@ -31,6 +33,7 @@ import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe.js";
     RedisModule,
     CacheModule,
     RateLimitModule,
+    MailModule,
     HealthModule,
     ProjectsModule,
     PostsModule,
@@ -42,6 +45,7 @@ import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe.js";
     TagsModule,
     DiagramsModule,
     MediaModule,
+    ContactModule,
   ],
   providers: [
     {

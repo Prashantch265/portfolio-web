@@ -82,3 +82,8 @@ export async function cleanupAdminByEmailPrefix(db: DrizzleDb, prefix: string) {
   const { like } = await import("drizzle-orm");
   await db.delete(schema.adminUsers).where(like(schema.adminUsers.email, `${prefix}%`));
 }
+
+export async function cleanupContactMessagesByEmailPrefix(db: DrizzleDb, prefix: string) {
+  const { like } = await import("drizzle-orm");
+  await db.delete(schema.contactMessages).where(like(schema.contactMessages.email, `${prefix}%`));
+}
