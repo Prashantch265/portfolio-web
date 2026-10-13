@@ -32,3 +32,4 @@ export * from "../../modules/admin-auth/admin-user.schema";
 export * from "../../modules/revisions/revision.schema";
 export * from "../../modules/media/media-asset.schema";
 export * from "../../modules/contact/contact.schema";
+export * from "../../modules/analytics/analytics.schema";

@@ -19,6 +19,7 @@
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/schedule": "^12.0.2",
     "@nestjs/swagger": "^11.4.7",
     "@portfolio/content": "workspace:*",
     "@portfolio/types": "workspace:*",

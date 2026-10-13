@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { ScheduleModule } from "@nestjs/schedule";
 import { APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
 import { validate } from "./config/env.validation.js";
 import { DrizzleModule } from "./db/drizzle.module.js";
@@ -18,6 +19,7 @@ import { TagsModule } from "./modules/tags/tags.module.js";
 import { DiagramsModule } from "./modules/diagrams/diagrams.module.js";
 import { MediaModule } from "./modules/media/media.module.js";
 import { ContactModule } from "./modules/contact/contact.module.js";
+import { AnalyticsModule } from "./modules/analytics/analytics.module.js";
 import { MailModule } from "./common/mail/mail.module.js";
 import { LoggingInterceptor } from "./common/interceptors/logging.interceptor.js";
 import { ResponseInterceptor } from "./common/interceptors/response.interceptor.js";
@@ -29,6 +31,7 @@ import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe.js";
       isGlobal: true,
       validate,
     }),
+    ScheduleModule.forRoot(),
     DrizzleModule,
     RedisModule,
     CacheModule,
@@ -46,6 +49,7 @@ import { ZodValidationPipe } from "./common/pipes/zod-validation.pipe.js";
     DiagramsModule,
     MediaModule,
     ContactModule,
+    AnalyticsModule,
   ],
   providers: [
     {
