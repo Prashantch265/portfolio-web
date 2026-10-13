@@ -26,6 +26,9 @@ export function Footer({
           {variant !== "bare" && (
             <ul className="site-footer__links">
               <li>
+                <Link href="/contact">Contact</Link>
+              </li>
+              <li>
                 <a href="mailto:prashantchy265@gmail.com">Email</a>
               </li>
               <li>

@@ -28,6 +28,7 @@ export const PALETTE_PAGES: PalettePage[] = [
   { label: "writing", path: "/writing" },
   { label: "cv", path: "/cv" },
   { label: "stack", path: "/stack" },
+  { label: "contact", path: "/contact" },
   { label: "design notes", path: "/brand" },
 ];
 
