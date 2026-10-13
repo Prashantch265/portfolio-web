@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: "/writing", label: "Writing" },
   { href: "/stack", label: "Stack" },
   { href: "/cv", label: "CV" },
+  { href: "/contact", label: "Contact" },
 ] as const;
 
 const RULE_SEEN_KEY = "schematic-rule-seen";
