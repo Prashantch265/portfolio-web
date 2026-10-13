@@ -43,6 +43,13 @@
       "when": 1791891460984,
       "tag": "0005_puzzling_blade",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791892100873,
+      "tag": "0006_ambitious_diamondback",
+      "breakpoints": true
     }
   ]
 }
