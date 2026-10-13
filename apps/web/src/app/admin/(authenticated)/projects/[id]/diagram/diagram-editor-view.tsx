@@ -7,6 +7,7 @@ import { ApiError, send, splitFieldErrors } from "../../../../_lib/api-client";
 import { Button, ButtonLink } from "../../../../_components/button";
 import { FormBanner } from "../../../../_components/field";
 import { RepeatableList } from "../../../../_components/repeatable-list";
+import { RevisionHistory } from "../../../../_components/revision-history";
 import { StatusPill, DirtyBadge } from "../../../../_components/status-pill";
 import { useToast } from "../../../../_components/toast";
 import type { DiagramAdminView, DiagramDoc, DiagramEdge, DiagramGroup, DiagramNode, DiagramRawRow } from "./types";
@@ -62,6 +63,16 @@ export function DiagramEditorView({ projectId }: { projectId: string }) {
   const [nodesFieldError, setNodesFieldError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [revisionRefreshKey, setRevisionRefreshKey] = useState(0);
+
+  function applyView(view: DiagramAdminView) {
+    setRevisionRefreshKey((k) => k + 1);
+    setDiagramId(view.id);
+    setMeta({ version: view.version, publishedVersion: view.publishedVersion, hasPendingDraft: view.hasPendingDraft });
+    setNodes(view.nodes);
+    setEdges(view.edges);
+    setGroupRows(toGroupRows(view.groups ?? []));
+  }
 
   useEffect(() => {
     // GET /diagrams has no ownerId filter (confirmed against the real
@@ -81,12 +92,7 @@ export function DiagramEditorView({ projectId }: { projectId: string }) {
       })
       .then((env) => {
         if (!env) return;
-        const view = env.data!;
-        setDiagramId(view.id);
-        setMeta({ version: view.version, publishedVersion: view.publishedVersion, hasPendingDraft: view.hasPendingDraft });
-        setNodes(view.nodes);
-        setEdges(view.edges);
-        setGroupRows(toGroupRows(view.groups ?? []));
+        applyView(env.data!);
         setLoading(false);
       })
       .catch((err) => {
@@ -129,11 +135,7 @@ export function DiagramEditorView({ projectId }: { projectId: string }) {
     const payload = { nodes, edges, groups: fromGroupRows(groupRows) };
     try {
       const res = await send<DiagramAdminView>("PUT", `/diagrams/${diagramId}`, () => payload);
-      const view = res.data!;
-      setMeta({ version: view.version, publishedVersion: view.publishedVersion, hasPendingDraft: view.hasPendingDraft });
-      setNodes(view.nodes);
-      setEdges(view.edges);
-      setGroupRows(toGroupRows(view.groups ?? []));
+      applyView(res.data!);
       toast("Saved as draft.", "success");
     } catch (err) {
       if (err instanceof ApiError) {
@@ -153,8 +155,7 @@ export function DiagramEditorView({ projectId }: { projectId: string }) {
     setBanner(null);
     try {
       const res = await send<DiagramAdminView>("POST", `/diagrams/${diagramId}/publish`);
-      const view = res.data!;
-      setMeta({ version: view.version, publishedVersion: view.publishedVersion, hasPendingDraft: view.hasPendingDraft });
+      applyView(res.data!);
       toast("Published.", "success");
     } catch (err) {
       if (err instanceof ApiError) setBanner(err.message);
@@ -340,6 +341,10 @@ export function DiagramEditorView({ projectId }: { projectId: string }) {
           ) : null}
         </div>
       </div>
+
+      {diagramId ? (
+        <RevisionHistory entityType="diagram" entityId={diagramId} refreshToken={revisionRefreshKey} onRestored={applyView} />
+      ) : null}
     </>
   );
 }

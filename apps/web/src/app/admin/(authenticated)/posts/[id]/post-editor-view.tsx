@@ -6,6 +6,7 @@ import { ApiError, send, splitFieldErrors } from "../../../_lib/api-client";
 import { Button } from "../../../_components/button";
 import { TextInput, NumberInput, TextareaField, FormBanner } from "../../../_components/field";
 import { ConfirmDialog } from "../../../_components/modal";
+import { RevisionHistory } from "../../../_components/revision-history";
 import { StatusPill, DirtyBadge } from "../../../_components/status-pill";
 import { useToast } from "../../../_components/toast";
 import type { PostAdminView, UpsertPostBody } from "../types";
@@ -34,8 +35,10 @@ export function PostEditorView({ id }: { id: string }) {
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [revisionRefreshKey, setRevisionRefreshKey] = useState(0);
 
   function applyView(view: PostAdminView) {
+    setRevisionRefreshKey((k) => k + 1);
     setMeta({ status: view.status, hasPendingDraft: view.hasPendingDraft });
     setForm({
       slug: view.slug,
@@ -172,6 +175,10 @@ export function PostEditorView({ id }: { id: string }) {
         />
         <TextInput label="Tags (comma-separated)" name="tags" value={tagsText} error={fieldErrors.tags} onChange={(e) => setTagsText(e.target.value)} />
       </div>
+
+      {postId ? (
+        <RevisionHistory entityType="post" entityId={postId} refreshToken={revisionRefreshKey} onRestored={applyView} />
+      ) : null}
 
       <ConfirmDialog
         open={confirmDelete}
