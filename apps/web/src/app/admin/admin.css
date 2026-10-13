@@ -390,21 +390,18 @@
    literal hex matching --ink-muted — light and dark need their own
    copy of this rule, same as every other place this file hardcodes a
    dark-mode value (e.g. --bg-sunken above). */
-.admin-root .field select,
-.admin-root .rlist__row-fields select {
+.admin-root .field select {
   appearance: none;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%235c5c5c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
   background-repeat: no-repeat;
   background-position: right 10px center;
   padding-right: 28px;
 }
-:root[data-theme="dark"] .admin-root .field select,
-:root[data-theme="dark"] .admin-root .rlist__row-fields select {
+:root[data-theme="dark"] .admin-root .field select {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23a3a3a3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .admin-root .field select,
-  :root:not([data-theme="light"]) .admin-root .rlist__row-fields select {
+  :root:not([data-theme="light"]) .admin-root .field select {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23a3a3a3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
   }
 }
@@ -485,7 +482,13 @@
 .admin-root .rlist__row-fields textarea,
 .admin-root .rlist__row-fields select {
   border: var(--rule-hairline-w) solid var(--rule);
-  background: var(--bg);
+  /* background-color, not the `background` shorthand — the shorthand
+     resets background-image/repeat/position to their initial values
+     too, which silently destroyed the custom select chevron below
+     (same specificity, later in the cascade — a real bug, caught live:
+     the chevron vanished and the control fell back to an unstyled,
+     textured native rendering). */
+  background-color: var(--bg);
   border-radius: 2px;
   padding: 7px 10px;
   font-size: var(--text-body-size);
@@ -499,6 +502,26 @@
 .admin-root .rlist__row-fields textarea:focus,
 .admin-root .rlist__row-fields select:focus {
   border-color: var(--signal);
+}
+/* Must come AFTER the generic rlist background-color/padding rule
+   above — same specificity, and source order is the tiebreaker.
+   Getting this backwards is exactly what broke it the first time:
+   the chevron's background-image and padding-right lost the cascade
+   to the generic rule's own values for those same properties. */
+.admin-root .rlist__row-fields select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%235c5c5c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+:root[data-theme="dark"] .admin-root .rlist__row-fields select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23a3a3a3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .admin-root .rlist__row-fields select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23a3a3a3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  }
 }
 .admin-root .rlist__row-remove {
   border: var(--rule-hairline-w) solid var(--rule);
