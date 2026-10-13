@@ -16,7 +16,6 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -26,6 +25,13 @@ jobs:
         app: [api, web]
     steps:
       - uses: actions/checkout@v4
+
+      # GHCR tags must be lowercase; github.repository preserves the
+      # owner's actual GitHub casing (e.g. Prashantch265), so a literal
+      # ${{ github.repository }} here produces an invalid tag and fails
+      # the push every time.
+      - name: Compute lowercase image prefix
+        run: echo "IMAGE_PREFIX=${{ env.REGISTRY }}/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
