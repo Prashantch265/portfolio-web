@@ -6,6 +6,7 @@ import { ApiError, send, splitFieldErrors } from "../../../_lib/api-client";
 import { Button, ButtonLink } from "../../../_components/button";
 import { TextInput, NumberInput, TextareaField, CheckboxField, FormBanner } from "../../../_components/field";
 import { RepeatableList } from "../../../_components/repeatable-list";
+import { RevisionHistory } from "../../../_components/revision-history";
 import { ConfirmDialog } from "../../../_components/modal";
 import { StatusPill, DirtyBadge } from "../../../_components/status-pill";
 import { useToast } from "../../../_components/toast";
@@ -49,8 +50,10 @@ export function ProjectEditorView({ id }: { id: string }) {
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [revisionRefreshKey, setRevisionRefreshKey] = useState(0);
 
   function applyView(view: ProjectAdminView) {
+    setRevisionRefreshKey((k) => k + 1);
     setMeta({ status: view.status, publishedAt: view.publishedAt, hasPendingDraft: view.hasPendingDraft });
     setCore({
       slug: view.slug,
@@ -351,6 +354,14 @@ export function ProjectEditorView({ id }: { id: string }) {
           </>
         )}
       </div>
+
+      {/* A case-study section edit is folded into its parent project's own
+          revision snapshot — confirmed against the real
+          revisions.controller.ts, which states this directly — so one
+          history here already covers both core fields and sections. */}
+      {projectId ? (
+        <RevisionHistory entityType="project" entityId={projectId} refreshToken={revisionRefreshKey} onRestored={applyView} />
+      ) : null}
 
       <ConfirmDialog
         open={confirmDelete}
