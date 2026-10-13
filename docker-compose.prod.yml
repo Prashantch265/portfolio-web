@@ -10,6 +10,11 @@
 #
 # Domain/DNS/TLS-challenge-method are open items (§16) — SITE_DOMAIN and
 # ACME_EMAIL are read from .env and must be set before this overlay is used.
+#
+# API_IMAGE/WEB_IMAGE: also .env-sourced, same pattern. Each defaults to
+# the floating `:latest` tag release.yml publishes, but can be pinned to
+# an immutable `:<git-sha>` tag (also pushed by release.yml) for rollback
+# — set the var in .env and rerun infra/deploy.sh.
 
 name: portfolio
 
@@ -50,6 +55,7 @@ services:
     restart: unless-stopped
 
   web:
+    image: ${WEB_IMAGE:-ghcr.io/prashantch265/portfolio-web/web:latest}
     restart: unless-stopped
     labels:
       - traefik.enable=true
@@ -61,6 +67,7 @@ services:
       - traefik.http.services.web.loadbalancer.server.port=3000
 
   api:
+    image: ${API_IMAGE:-ghcr.io/prashantch265/portfolio-web/api:latest}
     restart: unless-stopped
     labels:
       - traefik.enable=true
