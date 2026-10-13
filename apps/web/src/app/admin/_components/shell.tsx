@@ -24,11 +24,12 @@ const COUNT_ENDPOINTS = {
 
 // Order and labels match the mockup's sidebar exactly (app.js's NAV
 // array) minus "Design notes" (mockup-only, not a real screen), with
-// Contact added after Media — an M3 addition the mockup never had at
-// all. CV has no count badge, matching the mockup's own inconsistency.
-// Analytics isn't listed yet — its screen hasn't shipped (next PR);
-// /admin/analytics/summary also returns one object, not a bare array,
-// so it won't get a count badge via useSidebarCounts even once it is.
+// Contact and Analytics added after Media — both are M3 additions the
+// mockup never had at all. CV and Analytics have no count badge: CV
+// matches the mockup's own inconsistency, and /admin/analytics/summary
+// returns one object, not a bare array, so it can't reuse
+// useSidebarCounts's array-length mechanism the way every other badge
+// does.
 const NAV: NavItem[] = [
   { label: "Dashboard", href: "/admin" },
   { label: "Projects", href: "/admin/projects", countKey: "projects" },
@@ -37,6 +38,7 @@ const NAV: NavItem[] = [
   { label: "Tags", href: "/admin/tags", countKey: "tags" },
   { label: "Media", href: "/admin/media", countKey: "media" },
   { label: "Contact", href: "/admin/contact", countKey: "contact" },
+  { label: "Analytics", href: "/admin/analytics" },
   { label: "CV", href: "/admin/cv" },
 ];
 
