@@ -314,6 +314,14 @@
 .admin-root .status-pill--draft {
   color: var(--ink-muted);
 }
+.admin-root .status-pill--new {
+  color: var(--signal);
+  border-color: var(--signal);
+}
+.admin-root .status-pill--spam {
+  color: var(--danger);
+  border-color: var(--danger);
+}
 
 /* -----------------------------------------------------------------
    DirtyBadge — "the single most important piece of state on most
