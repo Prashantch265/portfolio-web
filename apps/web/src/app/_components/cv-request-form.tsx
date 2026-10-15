@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Button, trackEvent } from "@portfolio/ui";
+import { PublicApiError, publicSend } from "../../lib/public-api-client";
 
 type Status =
   | { kind: "idle" }
@@ -10,47 +11,28 @@ type Status =
   | { kind: "rate-limited"; message: string };
 
 const SUCCESS_MESSAGE = "Check your email — an expiring link to the full CV is on its way.";
-const RATE_LIMIT_MESSAGE = "Too many requests from this session — please try again later.";
+const GENERIC_ERROR_MESSAGE = "Something went wrong — try again, or email me directly.";
 
 /**
- * Faithful port of the mockup's `initForm("[data-cv-form]", ...)` state
- * machine (mockups/schematic/assets/app.js, lines ~139-210) as a real
- * React client component. There is no real `POST /api/cv/request` yet
- * (that's backend M1d / frontend F4) — this is a client-side stub only,
- * exactly like the mockup: honeypot filled -> silent success; required +
- * email-format validation -> inline error; valid submit -> disable
- * button + "Sending..." for ~700ms, then success — except once this
- * form instance has been submitted more than twice, in which case the
- * simulated round-trip resolves to the rate-limited message instead.
- * `submitCount` is component state, so it's scoped to this mounted form
- * instance/session exactly like the mockup's module-scoped counter,
- * never persisted.
+ * Real `POST /api/cv/request` (backend PRD §7, shipped #43). Honeypot
+ * ("company") is server-validated now, same disguised-rejection
+ * reasoning as ContactForm — this component doesn't try to detect spam
+ * itself, only surfaces a genuine 429.
  */
 export function CvRequestForm() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [emailError, setEmailError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const submitCountRef = useRef(0);
-  const formRef = useRef<HTMLFormElement>(null);
 
-  function handleSubmit(evt: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(evt: React.FormEvent<HTMLFormElement>) {
     evt.preventDefault();
     setStatus({ kind: "idle" });
 
     const form = evt.currentTarget;
     const data = new FormData(form);
-
-    // Honeypot — silently drop, mirrors backend PRD §9 spam defense.
-    // Never reveal the check happened: same success message, form reset.
-    const honeypot = String(data.get("company") ?? "");
-    if (honeypot) {
-      setStatus({ kind: "success", message: SUCCESS_MESSAGE });
-      setEmailError(false);
-      form.reset();
-      return;
-    }
-
+    const company = String(data.get("company") ?? "");
     const email = String(data.get("email") ?? "").trim();
+
     const valid = email.length > 0 && /.+@.+\..+/.test(email);
     if (!valid) {
       setEmailError(true);
@@ -58,34 +40,29 @@ export function CvRequestForm() {
       return;
     }
     setEmailError(false);
-    // Tracks genuine interest (§10) independent of the grant lifecycle —
-    // there is no CVAccessGrant yet (backend M4) for this to key off of,
-    // so this just measures how often the gate is reached, not approvals.
+    // Tracks genuine interest (§10) independent of grant approval.
     trackEvent("cv_request", "/cv");
 
-    submitCountRef.current += 1;
-    const thisSubmitCount = submitCountRef.current;
     setSubmitting(true);
-
-    // Simulated network round-trip, mirrors the real (future) API call.
-    setTimeout(() => {
-      setSubmitting(false);
-      if (thisSubmitCount > 2) {
-        setStatus({ kind: "rate-limited", message: RATE_LIMIT_MESSAGE });
-        return;
-      }
+    try {
+      await publicSend("POST", "/cv/request", { email, company: company || undefined });
       setStatus({ kind: "success", message: SUCCESS_MESSAGE });
       form.reset();
-    }, 700);
+    } catch (err) {
+      if (err instanceof PublicApiError && err.statusCode === 429) {
+        setStatus({ kind: "rate-limited", message: err.message });
+      } else {
+        setStatus({ kind: "error", message: GENERIC_ERROR_MESSAGE });
+      }
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  const statusClass =
-    status.kind === "idle"
-      ? "form-status"
-      : `form-status is-visible form-status--${status.kind}`;
+  const statusClass = status.kind === "idle" ? "form-status" : `form-status is-visible form-status--${status.kind}`;
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} style={{ marginTop: "var(--space-5)", maxWidth: "420px" }}>
+    <form onSubmit={(e) => void handleSubmit(e)} style={{ marginTop: "var(--space-5)", maxWidth: "420px" }}>
       <div className={`field${emailError ? " field--error" : ""}`}>
         <label htmlFor="cv-email">Email</label>
         <input id="cv-email" name="email" type="email" required autoComplete="email" />

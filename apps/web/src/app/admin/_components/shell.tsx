@@ -20,6 +20,7 @@ const COUNT_ENDPOINTS = {
   tags: "/tags",
   media: "/media",
   contact: "/contact",
+  cvRequests: "/cv-requests",
 } as const;
 
 // Order and labels match the mockup's sidebar exactly (app.js's NAV
@@ -40,6 +41,7 @@ const NAV: NavItem[] = [
   { label: "Contact", href: "/admin/contact", countKey: "contact" },
   { label: "Analytics", href: "/admin/analytics" },
   { label: "CV", href: "/admin/cv" },
+  { label: "CV requests", href: "/admin/cv-requests", countKey: "cvRequests" },
 ];
 
 function isActive(pathname: string, href: string): boolean {
