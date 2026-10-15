@@ -58,7 +58,11 @@ services:
     volumes:
       - media:/app/media # §2: local-volume media store, served through a controlled api route
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      # api's runner image is Debian-slim (glibc, for Playwright's
+      # Chromium — §8 CV PDF generation), which has no wget by default;
+      # node is always there, so the healthcheck uses it directly
+      # instead of adding a package just for this one check.
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 5
