@@ -46,8 +46,12 @@ jobs:
       MAIL_FROM_ADDRESS: no-reply@example.com
       SITE_ORIGIN: http://localhost:3000
       ANALYTICS_SALT: ci-analytics-salt
+    outputs:
+      affected: ${{ steps.affected.outputs.json }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # turbo's [<ref>] filter needs real history to diff against
 
       - uses: pnpm/action-setup@v4
 
@@ -74,6 +78,36 @@ jobs:
       - name: Dependency audit (non-blocking)
         run: pnpm audit --audit-level=high || true
 
+      # Which apps actually need a new image: @portfolio/<app>...[<range>]
+      # asks turbo "is <app>, or anything in its real dependency graph,
+      # affected by this range" — turbo's own graph (already the source of
+      # truth for ^build/^test above), not a hand-maintained path regex
+      # that has to be remembered every time a new shared package appears.
+      # Only meaningful on push (build-and-push is push-only); skipped on
+      # PRs since github.event.before isn't a push-event concept there.
+      - name: Compute affected apps
+        id: affected
+        if: github.event_name == 'push'
+        run: |
+          before='${{ github.event.before }}'
+          result='{}'
+          for app in api web; do
+            if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
+              build=true # no known prior commit — build to be safe
+            else
+              output=$(pnpm turbo run build --filter="@portfolio/$app...[$before...${{ github.sha }}]" --dry-run=json 2>/dev/null)
+              if [ -z "$output" ]; then
+                build=true # turbo produced nothing usable — build to be safe
+              elif [ "$(echo "$output" | jq '.packages | length')" -gt 0 ]; then
+                build=true
+              else
+                build=false
+              fi
+            fi
+            result=$(echo "$result" | jq --arg app "$app" --argjson build "$build" '. + {($app): $build}')
+          done
+          echo "json=$(echo "$result" | jq -c .)" >> "$GITHUB_OUTPUT"
+
   # Gated on `ci` passing — only push, not PR (a PR has nothing to deploy
   # yet). No code path reaches GHCR without the same lint/typecheck/test
   # run green, regardless of branch protection settings.
@@ -91,28 +125,15 @@ jobs:
       REGISTRY: ghcr.io
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # need full history to diff against github.event.before below
 
-      # Skip a matrix entry whose app didn't change — but still build it
-      # if anything shared changed (a package, the lockfile, turbo/workspace
-      # config), since turbo prune pulls those into every app's image.
-      #
-      # Diffs against github.event.before (the pre-push SHA), not HEAD^ —
-      # HEAD^ only sees the latest commit, so a push landing more than one
-      # commit (merge-commit strategy, or an admin bypassing squash-only)
-      # would silently miss earlier commits' changes.
+      # Skip this matrix entry's build/push if `ci` determined @portfolio/<app>
+      # (and its real dependency graph — shared packages, lockfile, etc.,
+      # per turbo) wasn't affected by this push.
       - name: Check for relevant changes
         id: changes
         run: |
-          before='${{ github.event.before }}'
-          if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
-            echo "build=true" >> "$GITHUB_OUTPUT" # no known prior commit — build to be safe
-          elif git diff --name-only "$before" "${{ github.sha }}" | grep -qE '^(apps/${{ matrix.app }}/|packages/|package\.json$|pnpm-lock\.yaml$|turbo\.json$|pnpm-workspace\.yaml$)'; then
-            echo "build=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "build=false" >> "$GITHUB_OUTPUT"
-          fi
+          build=$(echo '${{ needs.ci.outputs.affected }}' | jq -r '.["${{ matrix.app }}"]')
+          echo "build=$build" >> "$GITHUB_OUTPUT"
 
       # GHCR tags must be lowercase; github.repository preserves the
       # owner's actual GitHub casing (e.g. Prashantch265), so a literal
