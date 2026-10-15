@@ -1,5 +1,7 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Res } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
+import type { Response } from "express";
+import { SkipEnvelope } from "../../common/decorators/skip-envelope.decorator.js";
 import { SuccessMessage } from "../../common/decorators/success-message.decorator.js";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe.js";
 import { CvService } from "./cv.service.js";
@@ -31,5 +33,14 @@ export class CvController {
   @SuccessMessage("CV retrieved successfully.")
   getAccess(@Param("token") token: string) {
     return this.cvService.redeemToken(token);
+  }
+
+  @Get("access/:token/pdf")
+  @SkipEnvelope()
+  async getAccessPdf(@Param("token") token: string, @Res() res: Response) {
+    const pdf = await this.cvService.getCvPdf(token);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'attachment; filename="cv.pdf"');
+    res.send(pdf);
   }
 }

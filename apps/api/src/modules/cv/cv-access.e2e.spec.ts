@@ -87,7 +87,7 @@ describe("CV access grants (e2e)", () => {
     expect(rows).toHaveLength(0);
   });
 
-  it("full lifecycle: request -> approve -> redeem once -> second redeem fails", async () => {
+  it("full lifecycle: request -> approve -> redeem -> same-visit PDF read -> locked after the grace window", async () => {
     const email = `${TEST_REQUEST_EMAIL_PREFIX}${crypto.randomUUID()}@example.com`;
     await request(app.getHttpServer()).post("/api/cv/request").send({ email }).expect(200);
 
@@ -109,8 +109,19 @@ describe("CV access grants (e2e)", () => {
     const redeemed = await request(app.getHttpServer()).get(`/api/cv/access/${token}`).expect(200);
     expect(redeemed.body.data).toHaveProperty("summaryGated");
 
+    // Same-visit re-read (e.g. the page view, then "Download PDF")
+    // still works — the grace window exists exactly for this.
     const second = await request(app.getHttpServer()).get(`/api/cv/access/${token}`);
-    expect(second.status).toBe(404);
+    expect(second.status).toBe(200);
+
+    // Back-date usedAt past the grace window to simulate a later visit
+    // without waiting 5 real minutes — now it locks for good.
+    await db
+      .update(schema.cvAccessGrants)
+      .set({ usedAt: new Date(Date.now() - 6 * 60 * 1000) })
+      .where(eq(schema.cvAccessGrants.id, grant.id));
+    const third = await request(app.getHttpServer()).get(`/api/cv/access/${token}`);
+    expect(third.status).toBe(404);
   });
 
   it("revoke invalidates an approved-but-unused grant", async () => {

@@ -13,14 +13,17 @@ import type { MailAdapter } from "../../common/mail/mail-adapter.interface.js";
 import type { UpdateCvProfileDto } from "./dto/update-cv-profile.dto.js";
 import type { UpsertCvSectionDto } from "./dto/upsert-cv-section.dto.js";
 import type { RequestCvAccessDto } from "./dto/request-cv-access.dto.js";
+import { renderCvPdf } from "./lib/cv-pdf.js";
 
 const CACHE_KEY_PUBLIC = "content:cv:public";
 const CACHE_TTL_SECONDS = 60;
 
 const gatedCvSchema = cvSchema.extend({ summaryGated: z.string().nullable() });
+export type GatedCv = z.infer<typeof gatedCvSchema>;
 
 const REQUEST_RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000;
 const REQUEST_RATE_LIMIT_MAX = 3;
+const ISSUED_GRACE_MS = 5 * 60 * 1000;
 
 type CvSectionKind = (typeof schema.cvSectionKind.enumValues)[number];
 
@@ -233,15 +236,22 @@ export class CvService {
   }
 
   /**
-   * §7 step 3 — single-use: a valid token flips straight to `issued`.
-   * Every failure path (not found, wrong status, expired, already used)
-   * collapses to the same generic message — distinguishing them would
-   * tell a token-guesser which case they hit. Expiry is checked lazily
-   * here rather than by a sweep job: `status` only ever reads "expired"
-   * after someone actually tries a stale link, which is the only time
-   * the distinction matters.
+   * §7 step 3 — single-use: a valid token flips straight to `issued` on
+   * first read. §8 adds a second renderer (PDF) of the same one
+   * redemption, reached via the same token — a visitor who opens the
+   * link needs the page view AND the download to both work in that one
+   * visit, not just whichever format hits the server first. So "issued"
+   * stays readable for a short grace window after usedAt, then locks
+   * for good; this isn't unlimited reuse, just enough to cover opening
+   * the page and then clicking "Download PDF".
+   *
+   * Every failure path (not found, wrong status, expired, grace
+   * expired) collapses to the same generic message — distinguishing
+   * them would tell a token-guesser which case they hit. Expiry is
+   * checked lazily here rather than by a sweep job: `status` only ever
+   * reads "expired" after someone actually tries a stale link.
    */
-  async redeemToken(rawToken: string) {
+  private async validateAndMarkIssued(rawToken: string): Promise<void> {
     const tokenHash = createHash("sha256").update(rawToken).digest("hex");
     const grant = await this.db.query.cvAccessGrants.findFirst({ where: eq(schema.cvAccessGrants.tokenHash, tokenHash) });
 
@@ -250,11 +260,26 @@ export class CvService {
       await this.db.update(schema.cvAccessGrants).set({ status: "expired" }).where(eq(schema.cvAccessGrants.id, grant.id));
     }
 
-    if (!grant || grant.status !== "approved" || expired) {
+    const withinGrace = grant?.status === "issued" && grant.usedAt !== null && Date.now() - grant.usedAt.getTime() < ISSUED_GRACE_MS;
+
+    if (!grant || expired || (grant.status !== "approved" && !withinGrace)) {
       throw new NotFoundException("This link has expired or already been used.");
     }
 
-    await this.db.update(schema.cvAccessGrants).set({ status: "issued", usedAt: new Date() }).where(eq(schema.cvAccessGrants.id, grant.id));
+    if (grant.status === "approved") {
+      await this.db.update(schema.cvAccessGrants).set({ status: "issued", usedAt: new Date() }).where(eq(schema.cvAccessGrants.id, grant.id));
+    }
+  }
+
+  async redeemToken(rawToken: string) {
+    await this.validateAndMarkIssued(rawToken);
     return this.getCvForAccess();
+  }
+
+  /** §8 — same data, rendered the other way. Generated fresh on every call, never cached (§8's own "correctness over shaving render time" call). */
+  async getCvPdf(rawToken: string): Promise<Buffer> {
+    await this.validateAndMarkIssued(rawToken);
+    const cv = await this.getCvForAccess();
+    return renderCvPdf(cv);
   }
 }
