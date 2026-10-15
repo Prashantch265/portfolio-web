@@ -1,4 +1,4 @@
-import { integer, pgEnum, pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { timestamps } from "../../db/schema/shared";
 
 export const cvSectionKind = pgEnum("cv_section_kind", [
@@ -46,4 +46,18 @@ export const cvSections = pgTable("cv_sections", {
   visibility: cvSectionVisibility("visibility").notNull().default("public"),
   order: integer("order").notNull().default(0),
   ...timestamps,
+});
+
+export const cvAccessGrantStatus = pgEnum("cv_access_grant_status", ["pending", "approved", "issued", "expired", "revoked"]);
+
+export const cvAccessGrants = pgTable("cv_access_grants", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull(),
+  // Null until approved — a pending grant has no token yet (§7).
+  tokenHash: text("token_hash"),
+  status: cvAccessGrantStatus("status").notNull().default("pending"),
+  requestedAt: timestamp("requested_at", { withTimezone: true }).notNull().defaultNow(),
+  approvedAt: timestamp("approved_at", { withTimezone: true }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  usedAt: timestamp("used_at", { withTimezone: true }),
 });

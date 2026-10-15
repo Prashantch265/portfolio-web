@@ -50,6 +50,13 @@
       "when": 1791892100873,
       "tag": "0006_ambitious_diamondback",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792073111788,
+      "tag": "0007_stale_omega_sentinel",
+      "breakpoints": true
     }
   ]
 }
