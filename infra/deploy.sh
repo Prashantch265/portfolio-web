@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Runs ON THE VPS, not in CI (backend PRD §15). Pull-based deploy: this
-# script pulls whatever release.yml most recently pushed to GHCR — GitHub
+# script pulls whatever ci.yml's build-and-push job most recently pushed
+# to GHCR — GitHub
 # never gets shell access to this box, and no inbound port needs to be
 # opened for it.
 #

@@ -78,7 +78,7 @@ async function getAllPosts(): Promise<Post[]> {
  * apps/api/src/modules — no stack-layers/github-activity/status
  * module), and a live CI/deploy data source for the status strip has
  * no real signal to report yet (no deploy pipeline exists — see
- * .github/workflows/release.yml's own header). Revisit once a real
+ * .github/workflows/ci.yml's build-and-push job). Revisit once a real
  * source exists for each; inventing one now would violate frontend PRD
  * §2.4's "no invented fields" rule.
  */
